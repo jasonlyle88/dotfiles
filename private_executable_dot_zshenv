@@ -1,0 +1,72 @@
+#!/usr/bin/env zsh
+# shellcheck shell=bash
+
+################################################################################
+################################################################################
+##  .zshenv
+##
+##  ZSH configuration file order:
+##      .zshenv
+##      .zprofile
+##      .zshrc
+##      .zlogin
+##      .zlogout
+##
+##  This file is used only to set environment variables
+##
+################################################################################
+################################################################################
+
+##
+##  XDG
+##
+export XDG_CONFIG_HOME="${HOME}/.config"
+export XDG_CACHE_HOME="${HOME}/.cache"
+export XDG_DATA_HOME="${HOME}/.local/share"
+export XDG_STATE_HOME="${HOME}/.local/state"
+if [[ "${OSTYPE}" == "darwin"* ]]; then
+    export XDG_RUNTIME_DIR="$(getconf 'DARWIN_USER_TEMP_DIR')"
+else
+    export XDG_RUNTIME_DIR="/run/user/${UID}"
+fi
+
+##
+##  Internationalization
+##
+export LANG=en_US.UTF-8
+
+export LESSHISTFILE="$XDG_STATE_HOME"/less/history
+
+##
+##  Editor
+##
+if command -v 'emacs' 1>/dev/null 2>&1; then
+    export EDITOR='emacs -nw'
+    export VISUAL='emacs -nw'
+else
+    export EDITOR='nano'
+    export VISUAL='nano'
+fi
+
+##
+##  ZSH
+##
+export ZDOTDIR="${XDG_CONFIG_HOME}/zsh"
+
+export HISTFILE="${ZDOTDIR}/.zsh_history"   # History filepath
+export HISTSIZE=10000                       # Maximum events in history memory
+export SAVEHIST=10000                       # Maximum events in history file
+
+##
+##  Personal Setup
+##
+export PERSONAL_ZSH_SETUP_SCRIPTS_DIR="${ZDOTDIR}/scripts"
+export PERSONAL_BIN_DIR="${XDG_CONFIG_HOME}/bin"
+export PERSONAL_FUNCTIONS_DIR="${XDG_CONFIG_HOME}/functions"
+export PERSONAL_AUTOSOURCE_DIR="${XDG_CONFIG_HOME}/autosource"
+
+##
+##  Starship
+##
+export STARSHIP_CONFIG="${XDG_CONFIG_HOME}/starship/starship.toml"
+export STARSHIP_CACHE="${XDG_CONFIG_HOME}/starship/cache"

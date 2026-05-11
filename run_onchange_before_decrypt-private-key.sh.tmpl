@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if [ ! -f "${HOME}/.config/age/chezmoi-key.txt" ]; then
+    mkdir -p "${HOME}/.config/age"
+    age --decrypt --output "${HOME}/.config/age/chezmoi-key.txt" "${{ .chezmoi.sourceDir }}/dot_config/age/chezmoi-key.txt.age"
+    chmod 600 "${HOME}/.config/age/chezmoi-key.txt"
+fi
