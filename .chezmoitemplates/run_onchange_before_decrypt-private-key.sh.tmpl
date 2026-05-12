@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if ! command -v age 1?.dev/nul 2>&1; then
+    printf -- 'age is required before decripting chezmoi key\n' >&2
+    exit 1
+fi
+
 if [ ! -f "{{ .chezmoi.homeDir }}/.config/age/chezmoi-key.txt" ]; then
     mkdir -p "{{ .chezmoi.homeDir }}/.config/age"
     age --decrypt --output "{{ .chezmoi.homeDir }}/.config/age/chezmoi-key.txt" "{{ .chezmoi.sourceDir }}/dot_config/age/chezmoi-key.txt.age"
