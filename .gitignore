@@ -1,0 +1,5 @@
+chezmoi-key.txt
+*.age.tmp
+*~
+*.swp
+*.swo
