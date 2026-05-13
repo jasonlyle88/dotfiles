@@ -1,0 +1,153 @@
+################################################################################
+################################################################################
+# SSH Config
+#
+# Controls SSH behavior and create SSH aliases
+#
+# Keys creation:
+#   ssh-keygen \
+#       -t ed25519 \
+#       -a 100 \
+#       -C "jason.lyle88+pendragon+20260513@gmail.com" \
+#       -f "${HOME}\.ssh\personal-pendragon-20260513.key"
+# where the comment specifies a work or personal email address and + symbols to
+# separate host and creation date. Similar setup for file name, but with dashes.
+# When creating new keys, check what current best practices for keys are at the
+# time.
+################################################################################
+################################################################################
+
+################################################################################
+# Global
+################################################################################
+Host *
+    IgnoreUnknown           AddKeysToAgent,UseKeychain
+    UseKeychain             yes
+    AddKeysToAgent          yes
+    ServerAliveInterval     180
+
+################################################################################
+# Personal
+################################################################################
+Host personal.lyleserver
+    HostName                ssh.lyleserver.com
+    Port                    22
+    user                    jlyle
+    IdentitiesOnly          yes
+    IdentityFile            ~/.ssh/personal-pendragon-20260513-prv.key
+    ForwardAgent            Yes
+
+Host personal.nas
+    HostName                ssh.lyleserver.com
+    Port                    2222
+    user                    admin
+    IdentitiesOnly          yes
+    IdentityFile            ~/.ssh/personal-diskstation-20260513-prv.key
+    SetEnv                  TERM=xterm-256color
+
+#git clone personal.github:[USER]/[REPO].git
+Host github.com personal.github
+    HostName                github.com
+    User                    git
+    IdentitiesOnly          yes
+    IdentityFile            ~/.ssh/personal-github-20260513-prv.key
+
+Host personal.seedbox
+    HostName                45.152.209.117
+    Port                    2222
+    User                    user
+    IdentitiesOnly          yes
+    IdentityFile            ~/.ssh/personal-seedbox-20260513-prv.key
+    SetEnv                  TERM=xterm-256color
+
+################################################################################
+# Oracle
+################################################################################
+
+##
+## ACE team
+##
+
+host oracle.platform-linux.jlyle
+    HostName                foundation-install-2.sniadprace2.gbucdsint02iad.oraclevcn.com
+    IdentitiesOnly          yes
+    User                    jlyle
+    IdentityFile            ~/.ssh/oracle-foundation-install-jlyle-20260513-prv.key
+    ForwardAgent            yes
+
+host oracle.platform-linux.platform
+    HostName                foundation-install-2.sniadprace2.gbucdsint02iad.oraclevcn.com
+    IdentitiesOnly          yes
+    User                    platform
+    IdentityFile            ~/.ssh/oracle-foundation-install-platform-20260513-prv.key
+
+host oracle.platform-linux.opc
+    HostName                foundation-install-2.sniadprace2.gbucdsint02iad.oraclevcn.com
+    IdentitiesOnly          yes
+    User                    opc
+    IdentityFile            ~/.ssh/oracle-foundation-install-opc-20260513-prv.key
+
+##
+## SCM - GLOBAL
+##
+
+# Single Agent
+Host *.private.devops.scmservice.*.oci.oracleiaas.com
+    User                    jlyle@bmc_operator_access
+#    IdentitiesOnly          yes
+    PKCS11Provider          /usr/local/lib-unlinked/libykcs11.dylib
+
+##
+## SCM - Repositories
+##
+
+# git clone oracle.scm.jlyle:REPO
+# oracle.scm.jlyle - Defined in ~/.gitconfig
+
+#
+# SSH based Oracle jump hosts
+#
+
+# GPAS
+Host oracle.hcgbu.gpas-*
+    User                    ubuntu
+    HostName                bastion.oradbapex-sp3-zymkc.dev.gpas.ox.ac.uk
+    IdentitiesOnly          yes
+    IdentityFile            ~/.ssh/oracle_priv.key
+
+Host oracle.hcgbu.gpas-bastion
+
+Host oracle.hcgbu.gpas-dev-tunnel
+    LocalForward            *:1523 gpasapexdevatp.adb.uk-london-1.oraclecloud.com:1522
+    ExitOnForwardFailure    yes
+    ControlMaster           auto
+    ControlPath             ~/.ssh/tunnels/gpas-dev-%C
+
+Host oracle.hcgbu.gpas-unstable-tunnel
+    LocalForward            *:1524 gpasunstableatp.adb.uk-london-1.oraclecloud.com:1522
+    ExitOnForwardFailure    yes
+    ControlMaster           auto
+    ControlPath             ~/.ssh/tunnels/gpas-unstable-%C
+
+#
+# Yubikey based Oracle jump hosts
+#
+Host overlay-host.bastion.*
+    User                    jlyle
+    #Uncomment this line if opensc-pkcs11.so is not added to ssh-agent
+    # PKCS11Provider          /usr/local/lib/opensc-pkcs11.so
+
+Host ocid1.bastion.*
+    User                    jlyle
+    #Uncomment this line if opensc-pkcs11.so is not added to ssh-agent
+    # PKCS11Provider          /usr/local/lib/opensc-pkcs11.so
+
+Host oracle.hcgbu.opho-tunnel
+    HostName                ocid1.bastion.oc1.phx.amaaaaaabrlzbciawm5njcwaej3icyhpmixlwokxmbjq4g76ss7pefry72aa-192.168.10.3
+    ProxyJump               overlay-host.bastion.us-phoenix-1.oci.oracleiaas.com
+    LocalForward            *:1525 10.3.18.224:1522
+    #Uncomment this line if opensc-pkcs11.so is not added to ssh-agent
+    # PKCS11Provider          /usr/local/lib/opensc-pkcs11.so
+    ExitOnForwardFailure    yes
+    ControlMaster           auto
+    ControlPath             ~/.ssh/tunnels/ohpo-%C
