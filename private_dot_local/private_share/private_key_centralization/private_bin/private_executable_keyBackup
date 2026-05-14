@@ -1,0 +1,275 @@
+# shellcheck shell=bash
+
+function keyBackup() {
+    ############################################################################
+    #
+    # Functions
+    #
+    ############################################################################
+    function usage() {
+        printf -- 'Backup keys/configs to a central location.\n'
+        printf -- '\n'
+        printf -- 'Backup SSH, GPG, and AGE keys and configuration files.\n'
+        printf -- 'Backups are saved in the following location (in order of\n'
+        printf -- 'preference):\n'
+        # shellcheck disable=2016
+        printf -- '     - $KEY_CENTRALIZATION_HOME\n'
+        # shellcheck disable=2016
+        printf -- '     - $XDG_DATA_HOME/key_centralization\n'
+        printf -- '     - [Parent directory of this scripts directory]\n'
+        printf -- '\n'
+        printf -- 'The following arguments are recognized (* = required)\n'
+        printf -- '\n'
+        printf -- '  -h                 --  Show this help.\n'
+        printf -- '\n'
+        printf -- 'Example:\n'
+        printf -- '  %s\n' "${scriptName}"
+        printf -- '\n'
+
+        return 0
+    } # usage
+
+    function getCanonicalPath() {
+        ########################################################################
+        #   getCanonicalPath
+        #
+        #   Return a path that is both absolute and does not contain any
+        #   symbolic links. Always returns without a trailing slash.
+        #
+        #   The first parameter is the path to canonicalize
+        #
+        #   canonicalPath="$(getCanonicalPath "${somePath}")"
+        ########################################################################
+        local target="${1}"
+
+        if [ -d "${target}" ]; then
+            # dir
+            (cd "${target}" || exit; pwd -P)
+        elif [ -f "${target}" ]; then
+            # file
+            if [[ "${target}" = /* ]]; then
+                # Absolute file path
+                (cd "$(dirname "${target}")" || exit; printf -- '%s/%s\n' "$(pwd -P)" "$(basename "${target}")")
+            elif [[ "${target}" == */* ]]; then
+                # Relative file with path
+                printf -- '%s\n' "$(cd "${target%/*}" || exit; pwd -P)/${target##*/}"
+            else
+                # Relative file without path
+                printf -- '%s\n' "$(pwd -P)/${target}"
+            fi
+        fi
+    } # getCanonicalPath
+
+    function createBackup() {
+        local dir="${1}"
+
+        local parentDir
+        local name
+
+        parentDir="$(dirname "${dir}")"
+        name="$(basename "${dir}")"
+
+        tar -czf "${parentDir}/${name}.${executionTimestamp}.tar.gz" "${dir}" 1>/dev/null 2>&1
+    } # createBackup
+
+    ############################################################################
+    #
+    # Variables
+    #
+    ############################################################################
+
+    ############################################################################
+    ##  Configurable variables
+    ############################################################################
+
+    ############################################################################
+    ##  Script info
+    ############################################################################
+    local scriptBase
+    local scriptName
+    local scriptPath
+
+    # BASH and ZSH safe method for obtaining the current script
+    # shellcheck disable=SC2296
+    scriptBase="${BASH_SOURCE[0]:-${(%):-%x}}"
+    # shellcheck disable=SC2034
+    scriptName="$(basename -- "${scriptBase}" '.sh')"
+    # shellcheck disable=SC2034
+    scriptPath="$(getCanonicalPath "$(dirname -- "${scriptBase}")")"
+
+    ############################################################################
+    ##  Parameter variables
+    ############################################################################
+    local OPTIND
+    local OPTARG
+    local opt
+
+    ############################################################################
+    ##  Constants
+    ############################################################################
+    # shellcheck disable=SC2034,SC2155
+    local h1="$(printf "%0.s-" {1..80})"
+    # shellcheck disable=SC2034,SC2155
+    local h2="$(printf "%0.s-" {1..60})"
+    # shellcheck disable=SC2034,SC2155
+    local h3="$(printf "%0.s-" {1..40})"
+    # shellcheck disable=SC2034,SC2155
+    local h4="$(printf "%0.s-" {1..20})"
+    # shellcheck disable=SC2034,SC2155
+    local hs="$(printf "%0.s-" {1..2})"
+    # shellcheck disable=SC2034
+    local originalPWD="${PWD}"
+    # shellcheck disable=SC2034
+    local originalIFS="${IFS}"
+
+    local executionTimestamp
+
+    executionTimestamp="$(date +%y%m%d%H%M%S)"
+
+    ############################################################################
+    ##  Procedural variables
+    ############################################################################
+    local backupHome
+    local backupDirectory
+    local sourceDirectory
+
+    ############################################################################
+    #
+    # Option parsing
+    #
+    ############################################################################
+    while getopts ':h' opt
+    do
+
+        case "${opt}" in
+        'h')
+            usage
+            return $?
+            ;;
+        '?')
+            printf -- 'ERROR: Invalid option -%s\n\n' "${OPTARG}" >&2
+            usage >&2
+            return 3
+            ;;
+        ':')
+            printf -- 'ERROR: Option -%s requires an argument.\n' "${OPTARG}" >&2
+            return 4
+            ;;
+        esac
+
+    done
+
+    ############################################################################
+    #
+    # Function Logic
+    #
+    ############################################################################
+    printf -- '%s\n' "${h1}"
+    printf -- '%s\n' "${h1}"
+    printf -- '%s %s\n' "${hs}" "Key Centralization - Backup"
+    printf -- '%s\n' "${h1}"
+    printf -- '%s\n' "${h1}"
+
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Determine backup home"
+    printf -- '%s\n' "${h2}"
+    if [[ -n "${KEY_CENTRALIZATION_HOME}" ]]; then
+        backupHome="${KEY_CENTRALIZATION_HOME}"
+    elif [[ -n "${XDG_DATA_HOME}" ]]; then
+        backupHome="${XDG_DATA_HOME}/key_centralization"
+    else
+        backupHome="$(dirname "${scriptPath}")"
+    fi
+
+    printf -- 'Backup home: "%s"\n' "${backupHome}"
+
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Setup backup home and permissions"
+    printf -- '%s\n' "${h2}"
+
+    if [[ -d "${backupHome}" ]]; then
+        printf -- 'Backup home already exists.\n'
+    else
+        mkdir -p "$(dirname "${backupHome}")"
+
+        mkdir "${backupHome}"
+        chmod 700 "${backupHome}"
+
+        printf -- 'Backup home created.\n'
+    fi
+
+    # Set umask to 077 so files and directores are created securely
+    # Files created as          600
+    # Directories created as    700
+    umask 077
+
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Backup: SSH"
+    printf -- '%s\n' "${h2}"
+    backupDirectory="${backupHome}/ssh"
+    sourceDirectory="${HOME}/.ssh"
+    printf -- 'Backup directory: "%s"\n' "${backupDirectory}"
+    printf -- 'Source directory: "%s"\n' "${sourceDirectory}"
+
+    if [[ ! -d "${sourceDirectory}" ]]; then
+        printf -- 'Nothing to backup.\n'
+    else
+        if [[ -d "${backupDirectory}" ]]; then
+            createBackup "${backupDirectory}"
+            rm -rf "${backupDirectory}"
+        fi
+
+        mkdir "${backupDirectory}"
+
+        cp -a "${sourceDirectory}/"* "${backupDirectory}"
+    fi
+
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Backup: GPG"
+    printf -- '%s\n' "${h2}"
+    backupDirectory="${backupHome}/gpg"
+    sourceDirectory="${HOME}/.gnupg"
+    printf -- 'Backup directory: "%s"\n' "${backupDirectory}"
+    printf -- 'Source directory: "%s"\n' "${sourceDirectory}"
+
+    if [[ ! -d "${sourceDirectory}" ]]; then
+        printf -- 'Nothing to backup.\n'
+    else
+        if [[ -d "${backupDirectory}" ]]; then
+            createBackup "${backupDirectory}"
+            rm -rf "${backupDirectory}"
+        fi
+
+        mkdir "${backupDirectory}"
+
+        gpg --export --export-options 'backup' --output "${backupDirectory}/public.gpg"
+        gpg --export-secret-keys --export-options 'backup' --output "${backupDirectory}/private.gpg"
+        gpg --export-ownertrust > "${backupDirectory}/trust.gpg"
+    fi
+
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Backup: AGE"
+    printf -- '%s\n' "${h2}"
+    backupDirectory="${backupHome}/age"
+    sourceDirectory="${HOME}/.age"
+    printf -- 'Backup directory: "%s"\n' "${backupDirectory}"
+    printf -- 'Source directory: "%s"\n' "${sourceDirectory}"
+
+    if [[ ! -d "${sourceDirectory}" ]]; then
+        printf -- 'Nothing to backup.\n'
+    else
+        if [[ -d "${backupDirectory}" ]]; then
+            createBackup "${backupDirectory}"
+            rm -rf "${backupDirectory}"
+        fi
+
+        mkdir "${backupDirectory}"
+
+        cp -a "${HOME}/.age/"* "${backupDirectory}"
+    fi
+} # keyBackup
