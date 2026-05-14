@@ -38,6 +38,9 @@ source "${PERSONAL_AUTOSOURCE_DIR}/"*_pathmunge.zsh
 # Add personal bin to PATH
 pathmunge "${PERSONAL_BIN_DIR}"
 
+# Add local bin to PATH
+pathmunge "${HOME}/.local/bin"
+
 # Add autoload directory to FPATH
 pathmunge -f "${PERSONAL_AUTOLOAD_DIR}"
 
