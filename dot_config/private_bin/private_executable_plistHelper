@@ -1,0 +1,620 @@
+#!/usr/bin/env bash
+
+function main() {
+    ############################################################################
+    #
+    # Functions
+    #
+    ############################################################################
+    function usage() {
+        #TODO
+        printf -- 'A wrapper around plutil to make it more usable\n'
+        printf -- '\n'
+        printf -- 'This tool provides an easier, more understandable way to work\n'
+        printf -- 'with ".plist" files. It is a wrapper around plutil.\n'
+        printf -- '\n'
+        printf -- 'The following arguments are recognized (* = required)\n'
+        printf -- '\n'
+        printf -- '* -p {file}          --  The plist file to modify\n'
+        printf -- '* -a {action}        --  The type of action to preform on the plist file.\n'
+        printf -- '                         Must be one of:\n'
+        printf -- '                             - %s\n' "${plistActions[@]}"
+        printf -- '* -e                 --  The plist entry.\n'
+        printf -- '                         An entry always starts with a ":"\n'
+        printf -- '                         Sub-components are seperated with a ":"\n'
+        printf -- '  -h                 --  Show this help.\n'
+        printf -- '\n'
+        printf -- 'Example:\n'
+        printf -- '  %s -f ~/Library/Preferences/com.apple.dock -a "upsert" ":attribute" "bool" "true"\n' "${scriptName}"
+        printf -- '\n'
+
+        return 0
+    } # usage
+
+    function toUpperCase() {
+        ########################################################################
+        #   toUpperCase
+        #
+        #   Return a string with all upper case letters
+        #
+        #   All parameters are taken as a single string to get in all upper case
+        #
+        #   upperCaseVar="$(toUpperCase "${var}")"
+        ########################################################################
+        local string="$*"
+
+        printf -- '%s' "${string}" | tr '[:lower:]' '[:upper:]'
+
+        return 0
+    } # toUpperCase
+
+    function toLowerCase() {
+        ########################################################################
+        #   toLowerCase
+        #
+        #   Return a string with all lower case letters
+        #
+        #   All parameters are taken as a single string to get in all lower case
+        #
+        #   lowerCaseVar="$(toLowerCase "${var}")"
+        ########################################################################
+        local string="${*}"
+
+        printf -- '%s' "${string}" | tr '[:upper:]' '[:lower:]'
+
+        return 0
+    } # toLowerCase
+
+    function getCanonicalPath() {
+        ########################################################################
+        #   getCanonicalPath
+        #
+        #   Return a path that is both absolute and does not contain any
+        #   symbolic links. Always returns without a trailing slash.
+        #
+        #   The first parameter is the path to canonicalize
+        #
+        #   canonicalPath="$(getCanonicalPath "${somePath}")"
+        ########################################################################
+        local target="${1}"
+
+        if [ -d "${target}" ]; then
+            # dir
+            (cd "${target}" || exit; pwd -P)
+        elif [ -f "${target}" ]; then
+            # file
+            if [[ "${target}" = /* ]]; then
+                # Absolute file path
+                (cd "$(dirname "${target}")" || exit; printf -- '%s/%s\n' "$(pwd -P)" "$(basename "${target}")")
+            elif [[ "${target}" == */* ]]; then
+                # Relative file with path
+                printf -- '%s\n' "$(cd "${target%/*}" || exit; pwd -P)/${target##*/}"
+            else
+                # Relative file without path
+                printf -- '%s\n' "$(pwd -P)/${target}"
+            fi
+        fi
+    } # getCanonicalPath
+
+    function elementInArray() {
+        ############################################################################
+        #   elementInArray
+        #
+        #   Determine if an element exists in an array. Exits with a code of 0 if
+        #   element is present, otherwise exists with a value of 1
+        #
+        #   The first parameter is the element for which to search in an array.
+        #   The remaining parameters are the elements of the array.
+        #
+        #   if elementInArray "look for me" "${array[@]}"; then
+        #       echo "In array"
+        #   else
+        #       echo "Not in array"
+        #   fi
+        ############################################################################
+        local match="$1"
+        local arrayLength=$((${#}-1))
+        local idx
+
+        for (( idx=0; idx<arrayLength; idx++ )); do
+            shift
+
+            if [[ "$1" == "${match}" ]]; then
+                return 0
+            fi
+        done
+
+        return 1
+    } # elementInArray
+
+    function plistExists() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+        local plistType="${3}"
+
+        local exists=0
+        local matchesType=0
+
+        plutil -extract "${plistEntry}" xml1 -o - -- "${plistFile}" 1>/dev/null 2>&1
+        exists=$?
+
+        if [[ "${exists}" -eq 0 ]] && [[ -n "${plistType}" ]]; then
+            plutil -extract "${plistEntry}" xml1 -expect "${plistType}" -o - -- "${plistFile}" 1>/dev/null 2>&1
+            matchesType=$?
+        fi
+
+        if [[ "${exists}" -eq 0 ]] && [[ "${matchesType}" -eq 0 ]]; then
+            # Entry exists and matches type (or not type checking)
+            return 0
+        elif [[ "${exists}" -gt 0 ]]; then
+            # Entry does not exist
+            return 101
+        else
+            # Entry exists but does not match type
+            return 102
+        fi
+    } # plistExists
+
+    function plistInsert() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+        local plistType="${3}"
+        local plistValue="${4}"
+
+        local exitCode
+
+        plistExists "${plistFile}" "${plistEntry}"
+        exitCode=$?
+
+        if [[ "${exitCode}" -eq 0 ]]; then
+            printf -- 'ERROR: The plist entry (-e) already exists.\n' >&2
+            return 103
+        fi
+
+        if [[ "${plistType}" == 'dictionary' ]] || [[ "${plistType}" == 'array' ]]; then
+            plutil -insert "${plistEntry}" "-${plistType}" -- "${plistFile}"
+        else
+            plutil -insert "${plistEntry}" "-${plistType}" "${plistValue}" -- "${plistFile}"
+        fi
+    } # plistInsert
+
+    function plistUpdate() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+        local plistType="${3}"
+        local plistValue="${4}"
+
+        local exitCode
+
+        plistExists "${plistFile}" "${plistEntry}" "${plistType}"
+        exitCode=$?
+
+        if [[ "${exitCode}" -eq 101 ]]; then
+            printf -- 'ERROR: The plist entry (-e) does not exist.\n' >&2
+            return ${exitCode}
+        elif [[ "${exitCode}" -eq 102 ]]; then
+            printf -- 'ERROR: The plist entry (-e) does not match the entry type (-t).\n' >&2
+            return ${exitCode}
+        fi
+
+        plutil -replace "${plistEntry}" "-${plistType}" "${plistValue}" -- "${plistFile}"
+    } # plistUpdate
+
+    function plistDelete() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+
+        local exitCode
+
+        plistExists "${plistFile}" "${plistEntry}"
+        exitCode=$?
+
+        if [[ "${exitCode}" -eq 101 ]]; then
+            printf -- 'ERROR: The plist entry (-e) does not exist.\n' >&2
+            return ${exitCode}
+        fi
+
+        plutil -remove "${plistEntry}" -- "${plistFile}"
+    } # plistDelete
+
+    function plistUpsert() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+        local plistType="${3}"
+        local plistValue="${4}"
+
+        local exitCode
+
+        plistExists "${plistFile}" "${plistEntry}" "${plistType}"
+        exitCode=$?
+
+        if [[ "${exitCode}" -eq 0 ]]; then
+            plistUpdate "${plistFile}" "${plistEntry}" "${plistType}" "${plistValue}"
+        elif [[ "${exitCode}" -eq 101 ]]; then
+            plistInsert "${plistFile}" "${plistEntry}" "${plistType}" "${plistValue}"
+        elif [[ "${exitCode}" -eq 102 ]]; then
+            printf -- 'ERROR: The plist entry (-e) does not match the entry type (-t).\n' >&2
+            return ${exitCode}
+        fi
+    } # plistUpsert
+
+    function plistPrint() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+        local formatType="${3}"
+
+        local temporaryFile
+        local exitCode
+
+        if [[ -z "${plistEntry}" ]]; then
+            # Print the entire plist
+            temporaryFile="$(mktemp)"
+
+            command 'cat' "${plistFile}" > "${temporaryFile}"
+
+            plutil -convert "${formatType}" -- "${temporaryFile}"
+
+            command 'cat' "${temporaryFile}"
+
+            rm -f "${temporaryFile}"
+        else
+            # Print the plist entry
+            plistExists "${plistFile}" "${plistEntry}"
+            exitCode=$?
+
+            if [[ "${exitCode}" -eq 101 ]]; then
+                printf -- 'ERROR: The plist entry (-e) does not exist.\n' >&2
+                return ${exitCode}
+            fi
+
+            plutil -extract "${plistEntry}" "${formatType}" -o - -- "${plistFile}"
+        fi
+    }
+
+    function plistPrintType() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+
+        local exitCode
+        local entryType
+
+        plistExists "${plistFile}" "${plistEntry}"
+        exitCode=$?
+
+        if [[ "${exitCode}" -eq 101 ]]; then
+            printf -- 'ERROR: The plist entry (-e) does not exist.\n' >&2
+            return ${exitCode}
+        fi
+
+        for entryType in "${plistTypes[@]}"; do
+            if plistExists "${plistFile}" "${plistEntry}" "${entryType}"; then
+                printf -- '%s\n' "${entryType}"
+
+                return 0
+            fi
+        done
+
+        return 102
+    } # plistPrintType
+
+    function plistPrintDictKeys() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+
+        local exitCode
+
+        plistExists "${plistFile}" "${plistEntry}" 'dictionary'
+        exitCode=$?
+
+        if [[ "${exitCode}" -eq 101 ]]; then
+            printf -- 'ERROR: The plist entry (-e) does not exist.\n' >&2
+            return ${exitCode}
+        elif [[ "${exitCode}" -eq 102 ]]; then
+            printf -- 'ERROR: The plist entry (-e) is not a dictionary.\n' >&2
+            return ${exitCode}
+        fi
+
+        plutil -extract "${plistEntry}" raw -expect 'dictionary' -o - -- "${plistFile}"
+    } # plistPrintDictKeys
+
+    function plistPrintArrayLength() {
+        local plistFile="${1}"
+        local plistEntry="${2}"
+
+        local exitCode
+
+        plistExists "${plistFile}" "${plistEntry}" 'array'
+        exitCode=$?
+
+        if [[ "${exitCode}" -eq 101 ]]; then
+            printf -- 'ERROR: The plist entry (-e) does not exist.\n' >&2
+            return ${exitCode}
+        elif [[ "${exitCode}" -eq 102 ]]; then
+            printf -- 'ERROR: The plist entry (-e) is not a dictionary.\n' >&2
+            return ${exitCode}
+        fi
+
+        plutil -extract "${plistEntry}" raw -expect 'array' -o - -- "${plistFile}"
+    } # plistPrintArrayLength
+
+    ############################################################################
+    #
+    # Variables
+    #
+    ############################################################################
+
+    ############################################################################
+    ##  Configurable variables
+    ############################################################################
+
+    ############################################################################
+    ##  Script info
+    ############################################################################
+    local scriptBase
+    local scriptName
+    local scriptPath
+
+    # BASH and ZSH safe method for obtaining the current script
+    # shellcheck disable=SC2296
+    scriptBase="${BASH_SOURCE[0]:-${(%):-%x}}"
+    # shellcheck disable=SC2034
+    scriptName="$(basename -- "${scriptBase}" '.sh')"
+    # shellcheck disable=SC2034
+    scriptPath="$(getCanonicalPath "$(dirname -- "${scriptBase}")")"
+
+    ############################################################################
+    ##  Parameter variables
+    ############################################################################
+    local OPTIND
+    local OPTARG
+    local opt
+
+    local pFlag='false'
+    local aFlag='false'
+    local eFlag='false'
+    local tFlag='false'
+    local vFlag='false'
+    local fFlag='false'
+
+    local plistFile
+    local plistAction
+    local plistEntry
+    local plistType
+    local plistValue
+    local formatType
+
+    ############################################################################
+    ##  Constants
+    ############################################################################
+    # shellcheck disable=SC2034,SC2155
+    local h1="$(printf "%0.s-" {1..80})"
+    # shellcheck disable=SC2034,SC2155
+    local h2="$(printf "%0.s-" {1..60})"
+    # shellcheck disable=SC2034,SC2155
+    local h3="$(printf "%0.s-" {1..40})"
+    # shellcheck disable=SC2034,SC2155
+    local h4="$(printf "%0.s-" {1..20})"
+    # shellcheck disable=SC2034,SC2155
+    local hs="$(printf "%0.s-" {1..2})"
+    # shellcheck disable=SC2034
+    local originalPWD="${PWD}"
+    # shellcheck disable=SC2034
+    local originalIFS="${IFS}"
+
+    local -a plistActions=(
+        'exists'
+        'insert'
+        'update'
+        'delete'
+        'upsert'
+        'print'
+        'printType'
+        'printDictKeys'
+        'printArrayLength'
+    )
+    local -a plistActionsLower=()
+
+    local -a plistTypes=(
+        'array'
+        'bool'
+        'data'
+        'date'
+        'dictionary'
+        'float'
+        'integer'
+        'string'
+    )
+
+    local -a plistFormats=(
+        'xml'
+        'binary'
+        'raw' # Not valid for full file, returns length for arrays and keys for dictionaries
+    )
+
+    ############################################################################
+    ##  Procedural variables
+    ############################################################################
+    local entry
+
+    ############################################################################
+    #
+    # Option parsing
+    #
+    ############################################################################
+    while getopts ':p:a:e:t:v:f:h' opt
+    do
+
+        case "${opt}" in
+        'p')
+            pFlag='true'
+            plistFile="${OPTARG}"
+            ;;
+        'a')
+            aFlag='true'
+            plistAction="$(toLowerCase "${OPTARG}")"
+            ;;
+        'e')
+            eFlag='true'
+            plistEntry="${OPTARG}"
+            ;;
+        't')
+            tFlag='true'
+            plistType="${OPTARG}"
+            ;;
+        'v')
+            vFlag='true'
+            plistValue="${OPTARG}"
+            ;;
+        'f')
+            fFlag='true'
+            formatType="${OPTARG}"
+            ;;
+        'h')
+            usage
+            return 0
+            ;;
+        '?')
+            printf -- 'ERROR: Invalid option -%s\n\n' "${OPTARG}" >&2
+            usage >&2
+            return 3
+            ;;
+        ':')
+            printf -- 'ERROR: Option -%s requires an argument.\n' "${OPTARG}" >&2
+            return 4
+            ;;
+        esac
+
+    done
+
+    ############################################################################
+    #
+    # Parameter handling
+    #
+    ############################################################################
+    if ! command -v 'plutil' 1>/dev/null 2>&1; then
+        printf -- 'ERROR: The plutil utility must be installed.\n' >&2
+        return 11
+    fi
+
+    if [[ "${pFlag}" != 'true' ]]; then
+        printf -- 'ERROR: A plist file (-f) must be specified.\n' >&2
+        return 12
+    fi
+
+    if [[ "${aFlag}" != 'true' ]]; then
+        printf -- 'ERROR: A plist action (-a) must be specified.\n' >&2
+        return 13
+    fi
+
+    if [[ ! -f "${plistFile}" ]] || [[ ! -w "${plistFile}" ]]; then
+        printf -- 'ERROR: The plist file (-f) must be a valid readable/writable file.\n' >&2
+        return 14
+    fi
+
+    ############################################################################
+    #
+    # Function Logic
+    #
+    ############################################################################
+    for entry in "${plistActions[@]}"; do
+        plistActionsLower+=( "$(toLowerCase "${entry}")" )
+    done;
+
+    if ! elementInArray "${plistAction}" "${plistActionsLower[@]}"; then
+        printf -- 'ERROR: Invalid plist action (-a) specified. Must be one of:\n' >&2
+        printf -- '    - %s\n' "${plistActions[@]}" >&2
+        return 30
+    fi
+
+    # Do remaining parameter checking based on pListAction value
+    if [[ "${plistAction}" == 'exists' ]]; then
+        if [[ "${eFlag}" != 'true' ]]; then
+            printf -- 'ERROR: A plist element (-e) must be specified.\n' >&2
+            return 31
+        fi
+
+        : # TODO
+    elif [[ "${plistAction}" == 'insert' ]]; then
+        if [[ "${eFlag}" != 'true' ]]; then
+            printf -- 'ERROR: A plist element (-e) must be specified.\n' >&2
+            return 31
+        fi
+
+        : # TODO
+    elif [[ "${plistAction}" == 'update' ]]; then
+        if [[ "${eFlag}" != 'true' ]]; then
+            printf -- 'ERROR: A plist element (-e) must be specified.\n' >&2
+            return 31
+        fi
+
+        : # TODO
+    elif [[ "${plistAction}" == 'delete' ]]; then
+        if [[ "${eFlag}" != 'true' ]]; then
+            printf -- 'ERROR: A plist element (-e) must be specified.\n' >&2
+            return 31
+        fi
+
+        : # TODO
+    elif [[ "${plistAction}" == 'upsert' ]]; then
+        if [[ "${eFlag}" != 'true' ]]; then
+            printf -- 'ERROR: A plist element (-e) must be specified.\n' >&2
+            return 31
+        fi
+
+        : # TODO
+    elif [[ "${plistAction}" == 'print' ]]; then
+        : # TODO
+    elif [[ "${plistAction}" == 'printtype' ]]; then
+        if [[ "${eFlag}" != 'true' ]]; then
+            printf -- 'ERROR: A plist element (-e) must be specified.\n' >&2
+            return 31
+        fi
+
+        : # TODO
+    elif [[ "${plistAction}" == 'printdictkeys' ]]; then
+        if [[ "${eFlag}" != 'true' ]]; then
+            printf -- 'ERROR: A plist element (-e) must be specified.\n' >&2
+            return 31
+        fi
+
+        : # TODO
+    elif [[ "${plistAction}" == 'printarraylength' ]]; then
+        if [[ "${eFlag}" != 'true' ]]; then
+            printf -- 'ERROR: A plist element (-e) must be specified.\n' >&2
+            return 31
+        fi
+
+        : # TODO
+    fi
+
+    plistFile="$(getCanonicalPath "${plistFile}")"
+
+    if ! plutil -lint "${plistFile}" 1>/dev/null 2>&1; then
+        printf -- 'ERROR: The plist file (-f) is not a valid plist file.\n' >&2
+        return 100
+    fi
+
+    if [[ "${plistAction}" == 'exists' ]]; then
+        plistExists "${plistFile}" "${plistEntry}" "${plistType}"
+    elif [[ "${plistAction}" == 'insert' ]]; then
+        plistInsert "${plistFile}" "${plistEntry}" "${plistType}" "${plistValue}"
+    elif [[ "${plistAction}" == 'update' ]]; then
+        plistUpdate "${plistFile}" "${plistEntry}" "${plistType}" "${plistValue}"
+    elif [[ "${plistAction}" == 'delete' ]]; then
+        plistDelete "${plistFile}" "${plistEntry}"
+    elif [[ "${plistAction}" == 'upsert' ]]; then
+        plistUpsert "${plistFile}" "${plistEntry}" "${plistType}" "${plistValue}"
+    elif [[ "${plistAction}" == 'print' ]]; then
+        plistPrint "${plistFile}" "${plistEntry}" "${formatType}"
+    elif [[ "${plistAction}" == 'printtype' ]]; then
+        plistPrintType "${plistFile}" "${plistEntry}"
+    elif [[ "${plistAction}" == 'printdictkeys' ]]; then
+        plistPrintDictKeys "${plistFile}" "${plistEntry}"
+    elif [[ "${plistAction}" == 'printarraylength' ]]; then
+        plistPrintArrayLength "${plistFile}" "${plistEntry}"
+    fi
+
+    return $?
+} # main
+
+main "$@"

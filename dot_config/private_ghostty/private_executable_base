@@ -1,0 +1,25 @@
+shell-integration-features = no-cursor,no-title
+
+theme = Monokai Soda
+
+font-size = 14
+font-family = MesloLGS NF Regular
+font-family-bold = MesloLGS NF Bold
+font-family-italic = MesloLGS NF Italic
+font-family-bold-italic = MesloLGS NF Bold Italic
+
+cursor-invert-fg-bg = true
+cursor-style = block
+
+background-opacity = 0.75
+background-blur = true
+
+quick-terminal-screen = mouse
+
+#
+# Keybindings
+#
+
+# alt=opt or option
+# super=cmd or command
+keybind = global:alt+grave_accent=toggle_quick_terminal

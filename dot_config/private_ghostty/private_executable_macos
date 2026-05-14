@@ -1,0 +1,6 @@
+# Do not open a window when run
+# this allows me to open ghostty on startup
+# without opening a window
+initial-window = false
+
+macos-auto-secure-input = false

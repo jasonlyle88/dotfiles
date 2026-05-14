@@ -1,0 +1,98 @@
+###
+### Global configuration
+###
+
+format = """
+$os\
+$all\
+$fill\
+$status\
+$cmd_duration\
+$time\
+${custom.date}\
+$line_break\
+$character\
+"""
+
+# Adds a newline between shell prompts
+add_newline = false
+
+# Character to show when the command takes more than one line
+continuation_prompt = '[>](bright-green) '
+
+###
+### Module configurations
+###
+
+# Powerline characters
+#   █
+
+[cmd_duration]
+style="bg:yellow fg:black"
+format = '[](bg:prev_bg fg:yellow)[ $duration  ]($style)'
+
+[directory]
+style = "bold white"
+read_only_style = "bold red"
+format = "[](fg:prev_bg bg:blue)[ [$path]($style bg:blue)[$read_only]($read_only_style bg:blue) ](bg:blue)[](fg:blue)"
+
+[fill]
+symbol = '‒'
+style = "bold gray"
+
+[hostname]
+ssh_only = false
+trim_at = ''
+ssh_symbol = ' '
+style="bold yellow"
+format = '[[@](fg:white bg:black)$hostname$ssh_symbol ]($style bg:black)'
+
+[os]
+disabled = false
+style = "bold black"
+format = "[ $symbol ]($style bg:white)"
+
+[os.symbols]
+Amazon = ""
+Arch = ""
+CentOS = ""
+Debian = ""
+Fedora = ""
+Linux = ""
+Macos = ""
+Manjaro = ""
+Mint = ""
+Raspbian = ""
+Redhat = ""
+RedHatEnterprise = ""
+SUSE = ""
+Ubuntu = ""
+Windows = ""
+
+[status]
+disabled = false
+style = "bold bg:red fg:yellow"
+format = "[](fg:red)[ $status $symbol ]($style)"
+symbol = ""
+
+[time]
+disabled = false
+use_12hr = true
+style="bg:white fg:black"
+format = '[](bg:prev_bg fg:white)[ $time ]($style)'
+
+[username]
+show_always = true
+style_user = "bold yellow"
+style_root = "bold red"
+format = '[](fg:prev_bg bg:black)[ $user]($style bg:black)'
+
+###
+### Custom modules
+###
+
+[custom.date]
+when = true
+command = "date '+%m.%d.%Y'"
+style = "black"
+format = "[$output]($style bg:white)"

@@ -1,0 +1,8 @@
+#
+# GhosTTY Configuration
+#
+# https://ghostty.org/docs/config
+#
+
+config-file = base
+config-file = ?macos

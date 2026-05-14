@@ -1,0 +1,54 @@
+#!/usr/bin/env zsh
+# shellcheck shell=bash
+
+################################################################################
+################################################################################
+##  .zshrc
+##
+##  ZSH configuration file order:
+##      .zshenv
+##      .zprofile
+##      .zshrc
+##      .zlogin
+##      .zlogout
+##
+##  This file is the main ZSH configuration file
+##
+################################################################################
+################################################################################
+
+# Install fonts
+source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/fonts.zsh"
+
+# Set shell options
+source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/options.zsh"
+
+# Set ZSH ZStyle settings
+source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/zstyle.zsh"
+
+# Install, configure, and use ZSH Antidote
+source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/antidote.zsh"
+
+# Set key bindings
+source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/bindkey.zsh"
+
+# Source the pathmunge function so it can be used
+source "${PERSONAL_AUTOSOURCE_DIR}/"*_pathmunge.zsh
+
+# Add personal bin to PATH
+pathmunge "${PERSONAL_BIN_DIR}"
+
+# Add autoload directory to FPATH
+pathmunge -f "${PERSONAL_AUTOLOAD_DIR}"
+
+# Autoload all the files in PERSONAL_AUTOLOAD_DIR
+for autoload_file in "${PERSONAL_AUTOLOAD_DIR}/"*(.N); do
+    autoload -Uz "${autoload_file:t}"
+done
+unset autoload_file
+
+# Source all the files in PERSONAL_AUTOSOURCE_DIR in sorted order
+for autosource_file ("${PERSONAL_AUTOSOURCE_DIR}"/*.zsh(N)); do
+    source "${autosource_file}"
+done
+unset autosource_file

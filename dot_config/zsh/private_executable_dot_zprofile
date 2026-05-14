@@ -1,0 +1,23 @@
+#!/usr/bin/env zsh
+# shellcheck shell=bash
+
+################################################################################
+################################################################################
+##  .zprofile
+##
+##  ZSH configuration file order:
+##      .zshenv
+##      .zprofile
+##      .zshrc
+##      .zlogin
+##      .zlogout
+##
+##  This file is used to execute commands before .zshrc
+##
+################################################################################
+################################################################################
+
+##
+##  Enable ZSH Profiling
+##
+zmodload zsh/zprof  # 'zprof', 'zprof > zprof.out'

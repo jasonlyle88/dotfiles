@@ -1,0 +1,219 @@
+# shellcheck shell=bash
+
+############################################################################
+##  Configurable variables
+############################################################################
+
+############################################################################
+##  Procedural variables
+############################################################################
+local h1='################################################################################'
+local h2='############################################################'
+local h3='########################################'
+local hs='##'
+
+local outdatedList
+local outdatedCount
+
+############################################################################
+##  Execute updates
+############################################################################
+printf -- '%s\n' "${h1}"
+printf -- '%s %s\n' "${hs}" "System update"
+printf -- '%s\n' "${h1}"
+
+# if command -v 'TODO' 1>/dev/null 2>&1; then
+#     printf -- '\n'
+#     printf -- '%s\n' "${h2}"
+#     printf -- '%s %s\n' "${hs}" "TODO"
+#     printf -- '%s\n' "${h2}"
+# fi
+
+############################################################################
+# Mac App Store
+############################################################################
+if command -v 'mas' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "MacOS App Store"
+    printf -- '%s\n' "${h2}"
+
+    outdatedCount=0
+    if outdatedList="$(mas outdated)"; then
+        outdatedCount="$(printf -- '%s' "${outdatedList}" | wc -l | xargs)"
+
+        if [[ "${outdatedCount}" -gt 0 ]]; then
+            mas upgrade
+        fi
+    fi
+
+    printf -- '\n'
+    printf -- 'Completed\n'
+fi
+
+############################################################################
+# Homebrew
+############################################################################
+if command -v 'brew' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Homebrew"
+    printf -- '%s\n' "${h2}"
+
+    printf -- '\n'
+    printf -- '%s\n' "${h3}"
+    printf -- '%s %s\n' "${hs}" "Doctor"
+    printf -- '%s\n' "${h3}"
+
+    brew doctor
+
+    printf -- '\n'
+    printf -- '%s\n' "${h3}"
+    printf -- '%s %s\n' "${hs}" "Update"
+    printf -- '%s\n' "${h3}"
+
+    brew update -q
+
+    outdatedCount=0
+    if outdatedList="$(brew outdated)"; then
+        outdatedCount="$(printf -- '%s' "${outdatedList}" | wc -l | xargs)"
+
+        if [[ "${outdatedCount}" -gt 0 ]]; then
+            printf -- '\n%s\n\n' "${outdatedList}"
+            brew upgrade && brew cleanup
+        fi
+    fi
+
+    printf -- '\n'
+    printf -- 'Completed\n'
+fi
+
+############################################################################
+# Antidote
+############################################################################
+if command -v 'antidote' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Antidote"
+    printf -- '%s\n' "${h2}"
+
+    antidote update
+fi
+
+############################################################################
+# Starship
+############################################################################
+if command -v 'starship' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Starship"
+    printf -- '%s\n' "${h2}"
+
+    curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "${HOME}/.local/bin" 1>/dev/null
+fi
+
+############################################################################
+# SQLcl
+############################################################################
+if command -v 'sqlclUpdater' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "SQLcl"
+    printf -- '%s\n' "${h2}"
+
+    sqlclUpdater -l
+
+    printf -- '\n'
+    printf -- 'Completed\n'
+fi
+
+############################################################################
+# Mise
+############################################################################
+if command -v 'mise' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Mise"
+    printf -- '%s\n' "${h2}"
+
+    mise self-update -y
+fi
+
+############################################################################
+# Java
+############################################################################
+if command -v 'mise' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Java"
+    printf -- '%s\n' "${h2}"
+
+    (
+        mise ls-remote java@openjdk | sed 's/^/java@/'
+        mise ls-remote java@oracle | sed 's/^/java@/'
+        mise ls-remote java@temurin | sed 's/^/java@/'
+        mise ls-remote java@microsoft | sed 's/^/java@/'
+    ) | xargs mise install
+fi
+
+############################################################################
+# Node
+############################################################################
+if command -v 'mise' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Node"
+    printf -- '%s\n' "${h2}"
+
+    (
+        mise ls-remote node | sed 's/^/node@/'
+    ) | xargs mise install
+fi
+
+############################################################################
+# NPM
+############################################################################
+if command -v 'npm' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Node (global)"
+    printf -- '%s\n' "${h2}"
+
+    if curl -qkf https://registry.npmjs.org 1>/dev/null 2>&1; then
+        npm update -g --no-fund
+        printf -- '\n'
+        printf -- 'Completed\n'
+    else
+        printf -- '\n'
+        printf -- 'Unable to reach NPM registry\n'
+    fi
+fi
+
+############################################################################
+# Python
+############################################################################
+if command -v 'mise' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Python"
+    printf -- '%s\n' "${h2}"
+
+    (
+        mise ls-remote python | grep -E '^([0-9]+\.?)+$' | sed 's/^/python@/'
+    ) | xargs mise install
+fi
+
+############################################################################
+# PIPX
+############################################################################
+if command -v 'pipx' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "PipX"
+    printf -- '%s\n' "${h2}"
+
+    pipx upgrade-all
+
+    printf -- '\n'
+    printf -- 'Completed\n'
+fi

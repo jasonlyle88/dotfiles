@@ -1,0 +1,17 @@
+[user]
+    email = jason.lyle88@gmail.com
+    name = Jason Lyle
+[pull]
+    rebase = false
+[fetch]
+    prune = true
+[pager]
+    branch = false
+    tag = false
+    log = false
+[diff]
+    tool = bc
+[merge]
+    tool = bc
+[mergetool "bc"]
+    trustExitCode = true
