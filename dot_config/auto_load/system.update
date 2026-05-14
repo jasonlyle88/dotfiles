@@ -113,21 +113,6 @@ if command -v 'starship' 1>/dev/null 2>&1; then
 fi
 
 ############################################################################
-# SQLcl
-############################################################################
-if command -v 'sqlclUpdater' 1>/dev/null 2>&1; then
-    printf -- '\n'
-    printf -- '%s\n' "${h2}"
-    printf -- '%s %s\n' "${hs}" "SQLcl"
-    printf -- '%s\n' "${h2}"
-
-    sqlclUpdater -l
-
-    printf -- '\n'
-    printf -- 'Completed\n'
-fi
-
-############################################################################
 # Mise
 ############################################################################
 if command -v 'mise' 1>/dev/null 2>&1; then
@@ -140,6 +125,52 @@ if command -v 'mise' 1>/dev/null 2>&1; then
 fi
 
 ############################################################################
+# SQLcl
+############################################################################
+if command -v 'sqlclUpdater' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "SQLcl"
+    printf -- '%s\n' "${h2}"
+
+    # My old script, can remove after testing with mise for a while
+    # sqlclUpdater -l
+
+    # Get the latest version of Oracle SQLcl
+    local latestVersionString
+    latestVersionString="$(curl -sL -r 0-1000 https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip | \
+        grep -aoE "sqlcl/([0-9]+\.?)+" | \
+        head -n 1 | \
+        sed 's|sqlcl/||')"
+
+    # Check if the version string is valid
+    if [ -z "${latestVersionString}" ]; then
+        echo "Error: Unable to retrieve the latest version of Oracle SQLcl."
+        return 1
+    fi
+
+    # Check if the version string matches the expected format
+    if ! printf '%s' "${latestVersionString}" | grep -qE "^[0-9]+(\.[0-9]+){4}$"; then
+        echo "Error: Invalid version string retrieved: ${latestVersionString}"
+        return 1
+    fi
+
+    if mise ls aqua:oracle.com/sqlcl | grep -q "${latestVersionString}"; then
+        # Check if version is already installed
+        printf 'Oracle SQLcl version %s is already installed.\n' "${latestVersionString}"
+    else
+        # Install the latest version of Oracle SQLcl
+        printf 'Installing Oracle SQLcl version %s.\n' "${latestVersionString}"
+        mise use aqua:oracle.com/sqlcl@"${latestVersionString}"
+    fi
+
+    unset latestVersionString
+
+    printf -- '\n'
+    printf -- 'Completed\n'
+fi
+
+############################################################################
 # Java
 ############################################################################
 if command -v 'mise' 1>/dev/null 2>&1; then
@@ -149,11 +180,11 @@ if command -v 'mise' 1>/dev/null 2>&1; then
     printf -- '%s\n' "${h2}"
 
     (
-        mise ls-remote java@openjdk | sed 's/^/java@/'
+        mise ls-remote java@openjdk  | sed 's/^/java@/'
         mise ls-remote java@oracle | sed 's/^/java@/'
         mise ls-remote java@temurin | sed 's/^/java@/'
         mise ls-remote java@microsoft | sed 's/^/java@/'
-    ) | xargs mise install
+    ) | grep --invert-match -- '-jre-' | xargs mise install
 fi
 
 ############################################################################
