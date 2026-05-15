@@ -110,6 +110,8 @@ if command -v 'starship' 1>/dev/null 2>&1; then
     printf -- '%s\n' "${h2}"
 
     curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "${HOME}/.local/bin" 1>/dev/null
+
+    printf -- 'Completed\n'
 fi
 
 ############################################################################
@@ -130,7 +132,7 @@ fi
 if command -v 'mise' 1>/dev/null 2>&1; then
     printf -- '\n'
     printf -- '%s\n' "${h2}"
-    printf -- '%s %s\n' "${hs}" "Mise"
+    printf -- '%s %s\n' "${hs}" "Usage"
     printf -- '%s\n' "${h2}"
 
     mise use -g usage@latest
@@ -177,9 +179,6 @@ if command -v 'mise' 1>/dev/null 2>&1; then
     fi
 
     unset latestVersionString
-
-    printf -- '\n'
-    printf -- 'Completed\n'
 fi
 
 ############################################################################
@@ -193,12 +192,12 @@ if command -v 'mise' 1>/dev/null 2>&1; then
 
     (
         mise ls-remote java@openjdk  | sed 's/^/java@/'
-        mise ls-remote java@oracle | sed 's/^/java@/'
+        mise ls-remote java@oracle | grep -v 'oracle-26.0.0' | sed 's/^/java@/'
         mise ls-remote java@temurin | sed 's/^/java@/'
         mise ls-remote java@microsoft | sed 's/^/java@/'
-    ) | grep --invert-match -- '-jre-' | grep -vFf <(mise ls --no-header java | sed -E 's|^java[[:space:]]+||') | xargs mise install
+    ) | grep --invert-match -- '-jre-' | grep -vFf <(mise ls --no-header java | awk '{print $2}') | xargs mise install
 
-    mise use -g java@temurin@21
+    mise use -g java@temurin-21
 fi
 
 ############################################################################
@@ -211,8 +210,8 @@ if command -v 'mise' 1>/dev/null 2>&1; then
     printf -- '%s\n' "${h2}"
 
     (
-        mise ls-remote node | sed 's/^/node@/'
-    ) | grep -vFf <(mise ls --no-header node | sed -E 's|^node[[:space:]]+||') | xargs mise install
+        mise ls-remote node | awk -F '.' '$1 >= 16' | sed 's/^/node@/'
+    ) | grep -vFf <(mise ls --no-header node | awk '{print $2}') | xargs mise install
 
     mise use -g node@lts
 fi
@@ -247,7 +246,45 @@ if command -v 'mise' 1>/dev/null 2>&1; then
 
     (
         mise ls-remote python | grep -E '^([0-9]+\.?)+$' | sed 's/^/python@/'
-    ) | grep -vFf <(mise ls --no-header python | sed -E 's|^python[[:space:]]+||') | xargs mise install
+    ) | grep -v \
+            -e 'python@3.8.12' \
+            -e 'python@3.8.13' \
+            -e 'python@3.8.14' \
+            -e 'python@3.8.15' \
+            -e 'python@3.8.16' \
+            -e 'python@3.8.17' \
+            -e 'python@3.8.18' \
+            -e 'python@3.8.19' \
+            -e 'python@3.8.20' \
+            -e 'python@3.10.2' \
+            -e 'python@3.10.3' \
+            -e 'python@3.10.4' \
+            -e 'python@3.10.5' \
+            -e 'python@3.10.6' \
+            -e 'python@3.10.7' \
+            -e 'python@3.10.8' \
+            -e 'python@3.10.9' \
+            -e 'python@3.11.1' \
+            -e 'python@3.11.3' \
+            -e 'python@3.11.4' \
+            -e 'python@3.11.5' \
+            -e 'python@3.11.6' \
+            -e 'python@3.11.7' \
+            -e 'python@3.11.8' \
+            -e 'python@3.11.9' \
+            -e 'python@3.11.10' \
+            -e 'python@3.12.0' \
+            -e 'python@3.12.1' \
+            -e 'python@3.12.2' \
+            -e 'python@3.12.3' \
+            -e 'python@3.12.4' \
+            -e 'python@3.12.5' \
+            -e 'python@3.12.6' \
+            -e 'python@3.12.7' \
+            -e 'python@3.12.8' \
+            -e 'python@3.13.0' \
+            -e 'python@3.13.1' \
+     | grep -vFf <(mise ls --no-header python | awk '{print $2}') | xargs mise install
 
     mise use -g python@3
 fi
@@ -266,3 +303,8 @@ if command -v 'pipx' 1>/dev/null 2>&1; then
     printf -- '\n'
     printf -- 'Completed\n'
 fi
+
+printf -- '\n'
+printf -- '%s\n' "${h1}"
+printf -- '%s %s\n' "${hs}" "Completed system update"
+printf -- '%s\n' "${h1}"
