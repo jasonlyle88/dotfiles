@@ -19,3 +19,8 @@ fi
 
 # Activate mise
 eval "$(mise activate zsh)"
+
+# Generate and install mise completions if not already installed
+if [[ ! -f "${XDG_DATA_HOME}/zsh/site-functions/_mise" ]]; then
+    mise completion zsh  > "${XDG_DATA_HOME}/zsh/site-functions/_mise"
+fi
