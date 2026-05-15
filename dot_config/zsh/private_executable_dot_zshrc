@@ -41,6 +41,9 @@ pathmunge "${PERSONAL_BIN_DIR}"
 # Add local bin to PATH
 pathmunge "${HOME}/.local/bin"
 
+# Add personal completions to FPATH
+pathmunge -f "${XDG_DATA_HOME}/zsh/site-functions"
+
 # Add autoload directory to FPATH
 pathmunge -f "${PERSONAL_AUTOLOAD_DIR}"
 
