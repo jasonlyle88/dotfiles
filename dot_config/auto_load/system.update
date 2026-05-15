@@ -125,9 +125,21 @@ if command -v 'mise' 1>/dev/null 2>&1; then
 fi
 
 ############################################################################
+# Usage
+############################################################################
+if command -v 'mise' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Mise"
+    printf -- '%s\n' "${h2}"
+
+    mise use -g usage@latest
+fi
+
+############################################################################
 # SQLcl
 ############################################################################
-if command -v 'sqlclUpdater' 1>/dev/null 2>&1; then
+if command -v 'mise' 1>/dev/null 2>&1; then
     printf -- '\n'
     printf -- '%s\n' "${h2}"
     printf -- '%s %s\n' "${hs}" "SQLcl"
@@ -161,7 +173,7 @@ if command -v 'sqlclUpdater' 1>/dev/null 2>&1; then
     else
         # Install the latest version of Oracle SQLcl
         printf 'Installing Oracle SQLcl version %s.\n' "${latestVersionString}"
-        mise use aqua:oracle.com/sqlcl@"${latestVersionString}"
+        mise use -g aqua:oracle.com/sqlcl@"${latestVersionString}"
     fi
 
     unset latestVersionString
@@ -184,7 +196,9 @@ if command -v 'mise' 1>/dev/null 2>&1; then
         mise ls-remote java@oracle | sed 's/^/java@/'
         mise ls-remote java@temurin | sed 's/^/java@/'
         mise ls-remote java@microsoft | sed 's/^/java@/'
-    ) | grep --invert-match -- '-jre-' | xargs mise install
+    ) | grep --invert-match -- '-jre-' | grep -vFf <(mise ls --no-header java | sed -E 's|^java[[:space:]]+||') | xargs mise install
+
+    mise use -g java@temurin@21
 fi
 
 ############################################################################
@@ -198,7 +212,9 @@ if command -v 'mise' 1>/dev/null 2>&1; then
 
     (
         mise ls-remote node | sed 's/^/node@/'
-    ) | xargs mise install
+    ) | grep -vFf <(mise ls --no-header node | sed -E 's|^node[[:space:]]+||') | xargs mise install
+
+    mise use -g node@lts
 fi
 
 ############################################################################
@@ -231,7 +247,9 @@ if command -v 'mise' 1>/dev/null 2>&1; then
 
     (
         mise ls-remote python | grep -E '^([0-9]+\.?)+$' | sed 's/^/python@/'
-    ) | xargs mise install
+    ) | grep -vFf <(mise ls --no-header python | sed -E 's|^python[[:space:]]+||') | xargs mise install
+
+    mise use -g python@3
 fi
 
 ############################################################################
