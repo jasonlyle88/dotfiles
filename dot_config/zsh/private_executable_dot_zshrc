@@ -32,20 +32,22 @@ source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/antidote.zsh"
 # Set key bindings
 source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/bindkey.zsh"
 
-# Source the pathmunge function so it can be used
-source "${PERSONAL_AUTOSOURCE_DIR}/"*_pathmunge.zsh
+# Set path and fpath to be unique arrays
+typeset -U path fpath
 
-# Add personal bin to PATH
-pathmunge "${PERSONAL_BIN_DIR}"
+# Add personal bin and local bin to PATH
+path=(
+    "${PERSONAL_BIN_DIR}"
+    "${HOME}/.local/bin"
+    "${path[@]}"
+)
 
-# Add local bin to PATH
-pathmunge "${HOME}/.local/bin"
-
-# Add personal completions to FPATH
-pathmunge -f "${XDG_DATA_HOME}/zsh/site-functions"
-
-# Add autoload directory to FPATH
-pathmunge -f "${PERSONAL_AUTOLOAD_DIR}"
+# Add personal autoload and site-functions to FPATH
+fpath=(
+    "${PERSONAL_AUTOLOAD_DIR}"
+    "${XDG_DATA_HOME}/zsh/site-functions"
+    "${fpath[@]}"
+)
 
 # Autoload all the files in PERSONAL_AUTOLOAD_DIR
 for autoload_file in "${PERSONAL_AUTOLOAD_DIR}/"*(.N); do
