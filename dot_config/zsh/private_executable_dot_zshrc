@@ -17,9 +17,6 @@
 ################################################################################
 ################################################################################
 
-# Install fonts
-source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/fonts.zsh"
-
 # Set shell options
 source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/options.zsh"
 
