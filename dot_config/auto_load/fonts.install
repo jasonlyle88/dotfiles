@@ -1,0 +1,63 @@
+# shellcheck shell=bash
+
+################################################################################
+################################################################################
+##  fonts.install
+##
+##  Install fonts according to operating system
+##
+################################################################################
+################################################################################
+
+############################################################################
+##  Configurable variables
+############################################################################
+
+############################################################################
+##  Procedural variables
+############################################################################
+local h1='################################################################################'
+local h2='############################################################'
+local h3='########################################'
+local hs='##'
+
+local fontHome
+local fontInstallDir
+local startPos="${#fontHome}"
+local fontFileName
+local installedFontFile
+
+
+############################################################################
+##  Setup font related variables
+############################################################################
+fontHome="${XDG_CONFIG_HOME}/fonts"
+
+if [[ "${OSTYPE}" == "darwin"* ]]; then
+    fontInstallDir="${HOME:?}/Library/Fonts"
+else
+    fontInstallDir="${XDG_DATA_HOME}/fonts"
+fi
+
+############################################################################
+##  Install the fonts
+############################################################################
+mkdir -p "${fontInstallDir}"
+
+# Get length of the path string to fontHome so it can easily be used
+# to make relative paths from there
+startPos="${#fontHome}"
+
+startPos="$(( startPos + 1 ))"
+
+while IFS= read -r -u3 -d $'\0' fontFile; do
+    fontFileName="${fontFile:${startPos}}"
+    installedFontFile="${fontInstallDir}/${fontFileName}"
+    if [[ ! -f "${installedFontFile}" ]] ; then
+        cp -a "${fontFile}" "${installedFontFile}"
+    fi
+done 3< <(find "${fontHome}" -type f -print0)
+
+if command -v 'fc-cache' 1>/dev/null 2>&1; then
+    'fc-cache' "${fontInstallDir}"
+fi
