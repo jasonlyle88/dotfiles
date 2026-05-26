@@ -23,19 +23,13 @@ source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/options.zsh"
 # Set ZSH ZStyle settings
 source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/zstyle.zsh"
 
-# Install, configure, and use ZSH Antidote
-source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/antidote.zsh"
-
-# Set key bindings
-source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/bindkey.zsh"
-
 # Set path and fpath to be unique arrays
-typeset -U path fpath
+typeset -U path fpath manpath
 
 # Add personal bin and local bin to PATH
 path=(
     "${PERSONAL_BIN_DIR}"
-    "${HOME}/.local/bin"
+    "${XDG_BIN_HOME}"
     "${path[@]}"
 )
 
@@ -45,6 +39,18 @@ fpath=(
     "${XDG_DATA_HOME}/zsh/site-functions"
     "${fpath[@]}"
 )
+
+# Add local manpath
+manpath=(
+    "${XDG_DATA_HOME}/man"
+    "${manpath[@]}"
+)
+
+# Install, configure, and use ZSH Antidote
+source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/antidote.zsh"
+
+# Set key bindings
+source "${PERSONAL_ZSH_SETUP_SCRIPTS_DIR}/bindkey.zsh"
 
 # Autoload all the files in PERSONAL_AUTOLOAD_DIR
 for autoload_file in "${PERSONAL_AUTOLOAD_DIR}/"*(.N); do
