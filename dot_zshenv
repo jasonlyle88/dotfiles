@@ -22,6 +22,7 @@
 ##
 export XDG_CONFIG_HOME="${HOME}/.config"
 export XDG_CACHE_HOME="${HOME}/.cache"
+export XDG_BIN_HOME="${HOME}/.local/bin"
 export XDG_DATA_HOME="${HOME}/.local/share"
 export XDG_STATE_HOME="${HOME}/.local/state"
 if [[ "${OSTYPE}" == "darwin"* ]]; then
@@ -36,32 +37,9 @@ fi
 export ZDOTDIR="${XDG_CONFIG_HOME}/zsh"
 
 ##
-##  Editor
-##
-if command -v 'emacs' 1>/dev/null 2>&1; then
-    export EDITOR='emacs -nw'
-    export VISUAL='emacs -nw'
-else
-    export EDITOR='nano'
-    export VISUAL='nano'
-fi
-
-##
-##  History
-##
-export HISTFILE="${ZDOTDIR}/.zsh_history"   # History filepath
-export HISTSIZE=10000                       # Maximum events in history memory
-export SAVEHIST=10000                       # Maximum events in history file
-
-##
 ##  Internationalization
 ##
 export LANG=en_US.UTF-8
-
-##
-## Less
-##
-export LESSHISTFILE="${XDG_STATE_HOME}/less/history"
 
 ##
 ##  Personal Setup
