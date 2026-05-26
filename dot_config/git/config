@@ -15,3 +15,9 @@
     tool = bc
 [mergetool "bc"]
     trustExitCode = true
+
+#
+# Add a work override
+#
+[includeIf "gitdir:~/Work/xgbu-ace/"]
+    path = ~/.config/git/config_xgbu-ace
