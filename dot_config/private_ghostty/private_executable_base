@@ -16,6 +16,10 @@ background-blur = true
 
 quick-terminal-screen = mouse
 
+# Set the scrollback limit in bytes
+# 200000000 bytes = 200 megabytes
+scrollback-limit = 200000000
+
 #
 # Keybindings
 #
