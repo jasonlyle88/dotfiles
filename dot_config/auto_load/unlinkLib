@@ -1,0 +1,60 @@
+#shellcheck shell=bash
+
+################################################################################
+################################################################################
+##
+## This sets up a variable to reference a directory for "unlinked" libraries
+## Sometimes, libraries have to be under the /usr/lib*/* or /usr/local/lib*/*
+## directories to be loaded. This allows a safe place for these libraries to be
+## copied for use.
+##
+## To maintain links back to the original link, a symlink with the same name
+## appended with ".source" should be created pointing to the originally copied
+## file
+##
+################################################################################
+################################################################################
+
+if [[ -z "${_unlinkLibSetupDone}" ]]; then
+    # Define a setup tracking variable
+    local _unlinkLibSetupDone
+
+    local exitCode=0
+
+    export UNLINK_LIB_DIRECTORY="${UNLINK_LIB_DIRECTORY:-"/usr/local/lib-unlinked"}"
+
+    if [[ ! -d "${UNLINK_LIB_DIRECTORY}" ]]; then
+        printf -- 'WARNING: Unlinked library directory does not exist. Please create "%s"\n' "${UNLINK_LIB_DIRECTORY}" >&2
+        return 1
+    fi
+
+    if [[ "${exitCode}" -eq 0 ]] && [[ ! -w "${UNLINK_LIB_DIRECTORY}" ]]; then
+        printf -- 'WARNING: Unlinked library directory is not writable. Please ensure proper permissions for "%s"\n' "${UNLINK_LIB_DIRECTORY}" >&2
+        return 1
+    fi
+
+    _unlinkLibSetupDone=1
+fi
+
+libFile="$1"
+libFile="$(readlink -f "${libFile}")"
+libFilename="$(basename -- "${libFile}")"
+unlinklibFile="${UNLINK_LIB_DIRECTORY:?}/${libFilename}"
+
+if
+    [[ ! -f "${unlinklibFile}" ]] || # create the unlinked library file
+    [[ "${libFile}" -nt "${unlinklibFile}" ]] # Update the unlinked library file
+then
+
+    # Remove the old version and source symlink (if they exist)
+    rm -rf "${unlinklibFile}"
+    rm -rf "${unlinklibFile}.source"
+
+    # Create a copy of the library and a symlink with the same name
+    # to keep a record of its original source
+    cp -aL "${libFile}" "${unlinklibFile}"
+    ln -s "${libFile}" "${unlinklibFile}.source"
+
+fi
+
+printf -- '%s\n' "${unlinklibFile}"

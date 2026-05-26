@@ -109,7 +109,7 @@ if command -v 'starship' 1>/dev/null 2>&1; then
     printf -- '%s %s\n' "${hs}" "Starship"
     printf -- '%s\n' "${h2}"
 
-    curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "${HOME}/.local/bin" 1>/dev/null
+    curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "${XDG_BIN_HOME}" 1>/dev/null
 
     printf -- 'Completed\n'
 fi
@@ -182,6 +182,28 @@ if command -v 'mise' 1>/dev/null 2>&1; then
 fi
 
 ############################################################################
+# Liquibase
+############################################################################
+if command -v 'mise' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Liquibase"
+    printf -- '%s\n' "${h2}"
+
+    (
+        mise ls-remote liquibase | grep -E '^([0-9]+\.?)+$' | awk -F '.' '$1 >= 3' | sed 's/^/liquibase@/'
+    ) | grep -v \
+        -e 'liquibase@4.22.0' \
+        -e 'liquibase@4.25.2' \
+        -e 'liquibase@4.27.1' \
+        -e 'liquibase@4.29.3' \
+        -e 'liquibase@4.32.1' \
+    | grep -vFf <(mise ls --no-header liquibase | awk '{print $2}') | xargs mise install
+
+    mise use -g liquibase@latest
+fi
+
+############################################################################
 # Java
 ############################################################################
 if command -v 'mise' 1>/dev/null 2>&1; then
@@ -198,6 +220,10 @@ if command -v 'mise' 1>/dev/null 2>&1; then
     ) | grep --invert-match -- '-jre-' | grep -vFf <(mise ls --no-header java | awk '{print $2}') | xargs mise install
 
     mise use -g java@temurin-21
+fi
+
+if command -v 'java.SetupVersions' 1>/dev/null 2>&1; then
+    java.SetupVersions
 fi
 
 ############################################################################
@@ -284,7 +310,7 @@ if command -v 'mise' 1>/dev/null 2>&1; then
             -e 'python@3.12.8' \
             -e 'python@3.13.0' \
             -e 'python@3.13.1' \
-     | grep -vFf <(mise ls --no-header python | awk '{print $2}') | xargs mise install
+    | grep -vFf <(mise ls --no-header python | awk '{print $2}') | xargs mise install
 
     mise use -g python@3
 fi

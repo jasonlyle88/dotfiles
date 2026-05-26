@@ -1,0 +1,286 @@
+################################################################################
+################################################################################
+##  pathmunge
+##
+##  Create a pathmunge function for adding an entry onto the shell path or fpath
+##  if it does not already exist.
+##
+################################################################################
+################################################################################
+
+# Since shellcheck doesn't support zsh checking, use this bash checking for
+# basic checking
+# shellcheck shell=bash
+
+############################################################################
+#
+# Functions
+#
+############################################################################
+function usage() {
+    printf -- 'Modify the shell PATH or FPATH without creating duplicates.\n'
+    printf -- '\n'
+    printf -- 'This script takes optional arguments and a required positional'
+    printf -- 'argument of the entry to add.\n'
+    printf -- '\n'
+    printf -- 'The following arguments are recognized (* = required)\n'
+    printf -- '\n'
+    printf -- '  -a     --  Append entry to the end instead of the beginning.\n'
+    printf -- '  -c     --  Canonicalize entry prepend adding it.\n'
+    printf -- '             NOTE: Directory must exist in order for this to succeed.\n'
+    printf -- '  -f     --  Modify FPATH instead of PATH.\n'
+    printf -- '  -m     --  Move the entry if it already exits.\n'
+    printf -- '  -h     --  Show this help.\n'
+    printf -- '\n'
+    printf -- 'Example:\n'
+    printf -- '  %s -m "~/bin"\n' "${scriptName}"
+    printf -- '\n'
+
+    return 0
+} # usage
+
+function toUpperCase() {
+    ########################################################################
+    #   toUpperCase
+    #
+    #   Return a string with all upper case letters
+    #
+    #   All parameters are taken as a single string to get in all upper case
+    #
+    #   upperCaseVar="$(toUpperCase "${var}")"
+    ########################################################################
+    local string="$*"
+
+    printf -- '%s' "${string}" | tr '[:lower:]' '[:upper:]'
+
+    return 0
+} # toUpperCase
+
+function toLowerCase() {
+    ########################################################################
+    #   toLowerCase
+    #
+    #   Return a string with all lower case letters
+    #
+    #   All parameters are taken as a single string to get in all lower case
+    #
+    #   lowerCaseVar="$(toLowerCase "${var}")"
+    ########################################################################
+    local string="${*}"
+
+    printf -- '%s' "${string}" | tr '[:upper:]' '[:lower:]'
+
+    return 0
+} # toLowerCase
+
+function getCanonicalPath() {
+    ########################################################################
+    #   getCanonicalPath
+    #
+    #   Return a path that is both absolute and does not contain any
+    #   symbolic links. Always returns without a trailing slash.
+    #
+    #   The first parameter is the path to canonicalize
+    #
+    #   canonicalPath="$(getCanonicalPath "${somePath}")"
+    ########################################################################
+    local target="${1}"
+
+    if [ -d "${target}" ]; then
+        # dir
+        (cd "${target}" || exit; pwd -P)
+    elif [ -f "${target}" ]; then
+        # file
+        if [[ "${target}" = /* ]]; then
+            # Absolute file path
+            (cd "$(dirname "${target}")" || exit; printf -- '%s/%s\n' "$(pwd -P)" "$(basename "${target}")")
+        elif [[ "${target}" == */* ]]; then
+            # Relative file with path
+            printf -- '%s\n' "$(cd "${target%/*}" || exit; pwd -P)/${target##*/}"
+        else
+            # Relative file without path
+            printf -- '%s\n' "$(pwd -P)/${target}"
+        fi
+    fi
+} # getCanonicalPath
+
+############################################################################
+#
+# Variables
+#
+############################################################################
+
+############################################################################
+##  Configurable variables
+############################################################################
+
+############################################################################
+##  Script info
+############################################################################
+local scriptBase
+local scriptName
+local scriptPath
+
+# BASH and ZSH safe method for obtaining the current script
+# shellcheck disable=SC2296
+scriptBase="${BASH_SOURCE[0]:-${(%):-%x}}"
+# shellcheck disable=SC2034
+scriptName="$(basename -- "${scriptBase}" '.sh')"
+# shellcheck disable=SC2034
+scriptPath="$(getCanonicalPath "$(dirname -- "${scriptBase}")")"
+
+############################################################################
+##  Parameter variables
+############################################################################
+local OPTIND
+local OPTARG
+local opt
+
+local cFlag='false'
+local aFlag='false'
+local fFlag='false'
+local mFlag='false'
+
+local pathEntry
+
+############################################################################
+##  Constants
+############################################################################
+# shellcheck disable=SC2034,SC2155
+local h1="$(printf "%0.s-" {1..80})"
+# shellcheck disable=SC2034,SC2155
+local h2="$(printf "%0.s-" {1..60})"
+# shellcheck disable=SC2034,SC2155
+local h3="$(printf "%0.s-" {1..40})"
+# shellcheck disable=SC2034,SC2155
+local h4="$(printf "%0.s-" {1..20})"
+# shellcheck disable=SC2034,SC2155
+local hs="$(printf "%0.s-" {1..2})"
+# shellcheck disable=SC2034
+local originalPWD="${PWD}"
+# shellcheck disable=SC2034
+local originalIFS="${IFS}"
+
+############################################################################
+##  Procedural variables
+############################################################################
+local -a localPath
+local pathIndex
+local action
+
+############################################################################
+#
+# Option parsing
+#
+############################################################################
+while getopts ':acfmh' opt
+do
+
+    case "${opt}" in
+    'a')
+        aFlag='true'
+        ;;
+    'c')
+        cFlag='true'
+        ;;
+    'f')
+        fFlag='true'
+        ;;
+    'm')
+        mFlag='true'
+        ;;
+    'h')
+        usage
+        return $?
+        ;;
+    '?')
+        printf -- 'ERROR: Invalid option -%s\n\n' "${OPTARG}" >&2
+        usage >&2
+        return 3
+        ;;
+    ':')
+        printf -- 'ERROR: Option -%s requires an argument.\n' "${OPTARG}" >&2
+        return 4
+        ;;
+    esac
+
+done
+
+# Get the first positional parameter
+# This is based on how many options getopts has already parsed (OPTIND)
+pathEntry="${*:${OPTIND}:1}"
+
+############################################################################
+#
+# Parameter handling
+#
+############################################################################
+if [[ -z "${pathEntry}" ]]; then
+    printf -- 'ERROR: An entry to add must be provided.\n' >&2
+    return 11
+fi
+
+if [[ $# -ge $(( OPTIND + 1 )) ]]; then
+    printf -- 'ERROR: Only one entry can be provided.\n' >&2
+    return 12
+fi
+
+if [[ "${cFlag}" == 'true' ]] && [[ ! -d "${pathEntry}" ]]; then
+    printf -- 'ERROR: Path entry must exist to be canonicalized (-c).\n' >&2
+    return 13
+fi
+
+############################################################################
+#
+# Function Logic
+#
+############################################################################
+if [[ "${fFlag}" == 'false' ]]; then
+    localPath=( "${path[@]}" )
+else
+    localPath=( "${fpath[@]}" )
+fi;
+
+# Canonicalize entry if requested
+if [[ "${cFlag}" == 'true' ]]; then
+    pathEntry="$(getCanonicalPath "${pathEntry}")"
+fi
+
+# Get the index of the pathEntry in the array
+# Get 0 if pathEntry is not in array
+pathIndex="${localPath[(Ie)${pathEntry}]}"
+
+# Determine the action based on the provided flags
+if [[ "${mFlag}" == 'true' ]]; then
+    action='move-'
+fi
+
+if [[ "${aFlag}" == 'false' ]]; then
+    action="${action}prepend"
+else
+    action="${action}append"
+fi
+
+# If the pathEntry does not exist in path already, then make move-prepend
+# and move-append behave like prepend and append (respectively)
+if [[ "${pathIndex}" -eq 0 ]] && [[ "${action}" == 'move-'* ]]; then
+    action="${action#'move-'}"
+fi
+
+# Perform the path addition based on the action
+if [[ "${action}" == 'prepend' ]] && [[ "${pathIndex}" -eq 0 ]]; then
+    localPath=( "${pathEntry}" "${localPath[@]}" )
+elif [[ "${action}" == 'append' ]] && [[ "${pathIndex}" -eq 0 ]]; then
+    localPath+=( "${pathEntry}" )
+elif [[ "${action}" == 'move-prepend' ]]; then
+    localPath=( "${pathEntry}" "${localPath[@]:0:${pathIndex}-1}" "${localPath[@]:${pathIndex}}" )
+elif [[ "${action}" == 'move-append' ]]; then
+    localPath=( "${localPath[@]:0:${pathIndex}-1}" "${localPath[@]:${pathIndex}}" "${pathEntry}" )
+fi
+
+# Apply the localPath array back onto the appropriate path/fpath array
+if [[ "${fFlag}" == 'false' ]]; then
+    export path=( "${localPath[@]}" )
+else
+    export fpath=( "${localPath[@]}" )
+fi;

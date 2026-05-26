@@ -1,0 +1,57 @@
+# shellcheck shell=bash
+
+############################################################################
+## Configurable variables
+############################################################################
+local -a javaAddIns=("$(dirname "$(mise where java)")")
+local systemJavaDirectory="/Library/Java/JavaVirtualMachines"
+local javaHomeSubdirectory="/Contents/Home"
+
+############################################################################
+## Procedural variables
+############################################################################
+local headerFull="--------------------------------------------------------------------------------"
+local headerText="--"
+local javaName
+local javaBinary
+
+printf -- '%s\n' "${headerFull}"
+printf -- '%s Ensure write access\n' "${headerText}"
+printf -- '%s\n' "${headerFull}"
+if touch "${systemJavaDirectory}" 1>/dev/null 2>&1; then
+    printf -- 'Write access to %s is available\n' "${systemJavaDirectory}"
+else
+    printf -- 'Write access to %s is not available\n' "${systemJavaDirectory}" >&2
+    exit 1
+fi
+printf -- '\n'
+
+printf -- '%s\n' "${headerFull}"
+printf -- '%s Cleanup Java add-ins\n' "${headerText}"
+printf -- '%s\n' "${headerFull}"
+for javaAddIn in "${javaAddIns[@]}"; do
+    find "${javaAddIn}/"* -type d -maxdepth 0 -print | \
+    sed "s|^${javaAddIn}|${systemJavaDirectory}|" | \
+    tee /dev/tty | \
+    xargs rm -rf "{}"
+done
+printf "\n"
+
+printf -- '%s\n' "${headerFull}"
+printf -- '%s Insert Java add-ins\n' "${headerText}"
+printf -- '%s\n' "${headerFull}"
+for javaAddIn in "${javaAddIns[@]}"; do
+    IFS=""
+    exec 3< <(find "${javaAddIn}/"* -type d -maxdepth 0)
+    while read -r javaDirectory <&3 || [ -n "${javaDirectory}" ]
+    do
+        javaName="$(basename "${javaDirectory}")"
+
+        printf -- 'Adding: "%s"...\n' "${javaName}"
+
+        mkdir "${systemJavaDirectory}/${javaName}"
+        ln -s "${javaDirectory}/Contents" "${systemJavaDirectory}/${javaName}/Contents"
+
+    done
+done
+printf -- '\n'

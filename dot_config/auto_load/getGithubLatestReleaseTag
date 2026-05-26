@@ -1,0 +1,273 @@
+# shellcheck shell=bash
+
+############################################################################
+#
+# Functions
+#
+############################################################################
+function usage() {
+    printf -- 'Get the tag for the latest release of a GitHub repository\n'
+    printf -- '\n'
+    printf -- 'This script sets the GITHUB_LATEST_RELEASE_TAG variable to\n'
+    printf -- 'the value of the latest release tag so it can be used by\n'
+    printf -- 'later scripts.\n'
+    printf -- '\n'
+    printf -- 'The following arguments are recognized (* = required)\n'
+    printf -- '\n'
+    printf -- '* -r {repo}          --  The GitHub repository.\n'
+    printf -- '  -t {token}         --  Auhorization token to use for the GitHub API.\n'
+    printf -- '* -u {user}          --  The GitHub user that owns the repository.\n'
+    printf -- '  -h                 --  Show this help.\n'
+    printf -- '\n'
+    printf -- 'Example:\n'
+    printf -- '  %s -u "foo" -r "bar"\n' "${scriptName}"
+    printf -- '\n'
+
+    return 0
+} # usage
+
+function toUpperCase() {
+    ########################################################################
+    #   toUpperCase
+    #
+    #   Return a string with all upper case letters
+    #
+    #   All parameters are taken as a single string to get in all upper case
+    #
+    #   upperCaseVar="$(toUpperCase "${var}")"
+    ########################################################################
+    local string="$*"
+
+    printf -- '%s' "${string}" | tr '[:lower:]' '[:upper:]'
+
+    return 0
+} # toUpperCase
+
+function toLowerCase() {
+    ########################################################################
+    #   toLowerCase
+    #
+    #   Return a string with all lower case letters
+    #
+    #   All parameters are taken as a single string to get in all lower case
+    #
+    #   lowerCaseVar="$(toLowerCase "${var}")"
+    ########################################################################
+    local string="${*}"
+
+    printf -- '%s' "${string}" | tr '[:upper:]' '[:lower:]'
+
+    return 0
+} # toLowerCase
+
+function getCanonicalPath() {
+    ########################################################################
+    #   getCanonicalPath
+    #
+    #   Return a path that is both absolute and does not contain any
+    #   symbolic links. Always returns without a trailing slash.
+    #
+    #   The first parameter is the path to canonicalize
+    #
+    #   canonicalPath="$(getCanonicalPath "${somePath}")"
+    ########################################################################
+    local target="${1}"
+
+    if [ -d "${target}" ]; then
+        # dir
+        (cd "${target}" || exit; pwd -P)
+    elif [ -f "${target}" ]; then
+        # file
+        if [[ "${target}" = /* ]]; then
+            # Absolute file path
+            (cd "$(dirname "${target}")" || exit; printf -- '%s/%s\n' "$(pwd -P)" "$(basename "${target}")")
+        elif [[ "${target}" == */* ]]; then
+            # Relative file with path
+            printf -- '%s\n' "$(cd "${target%/*}" || exit; pwd -P)/${target##*/}"
+        else
+            # Relative file without path
+            printf -- '%s\n' "$(pwd -P)/${target}"
+        fi
+    fi
+} # getCanonicalPath
+
+############################################################################
+#
+# Variables
+#
+############################################################################
+
+############################################################################
+##  Configurable variables
+############################################################################
+
+############################################################################
+##  Script info
+############################################################################
+local scriptBase
+local scriptName
+local scriptPath
+
+# BASH and ZSH safe method for obtaining the current script
+# shellcheck disable=SC2296
+scriptBase="${BASH_SOURCE[0]:-${(%):-%x}}"
+# shellcheck disable=SC2034
+scriptName="$(basename -- "${scriptBase}" '.sh')"
+# shellcheck disable=SC2034
+scriptPath="$(getCanonicalPath "$(dirname -- "${scriptBase}")")"
+
+############################################################################
+##  Parameter variables
+############################################################################
+local OPTIND
+local OPTARG
+local opt
+
+local rFlag='false'
+local tFlag='false'
+local uFlag='false'
+
+local githubRepo
+local githubToken
+local githubUser
+
+############################################################################
+##  Constants
+############################################################################
+# shellcheck disable=SC2034,SC2155
+local h1="$(printf "%0.s-" {1..80})"
+# shellcheck disable=SC2034,SC2155
+local h2="$(printf "%0.s-" {1..60})"
+# shellcheck disable=SC2034,SC2155
+local h3="$(printf "%0.s-" {1..40})"
+# shellcheck disable=SC2034,SC2155
+local h4="$(printf "%0.s-" {1..20})"
+# shellcheck disable=SC2034,SC2155
+local hs="$(printf "%0.s-" {1..2})"
+# shellcheck disable=SC2034
+local originalPWD="${PWD}"
+# shellcheck disable=SC2034
+local originalIFS="${IFS}"
+
+############################################################################
+##  Procedural variables
+############################################################################
+local -a curlParameters=()
+local apiResponse
+local latestTag
+
+############################################################################
+#
+# Option parsing
+#
+############################################################################
+while getopts ':r:t:u:h' opt
+do
+
+    case "${opt}" in
+    'r')
+        rFlag='true'
+        githubRepo="${OPTARG}"
+        ;;
+    't')
+        tFlag='true'
+        githubToken="${OPTARG}"
+        ;;
+    'u')
+        uFlag='true'
+        githubUser="${OPTARG}"
+        ;;
+    'h')
+        usage
+        return $?
+        ;;
+    '?')
+        printf -- 'ERROR: Invalid option -%s\n\n' "${OPTARG}" >&2
+        usage >&2
+        return 3
+        ;;
+    ':')
+        printf -- 'ERROR: Option -%s requires an argument.\n' "${OPTARG}" >&2
+        return 4
+        ;;
+    esac
+
+done
+
+############################################################################
+#
+# Parameter handling
+#
+############################################################################
+if [[ "${uFlag}" != 'true' ]]; then
+    printf -- 'ERROR: GitHub user (-u) must be specified.\n' >&2
+    return 11
+fi
+
+if [[ "${rFlag}" != 'true' ]]; then
+    printf -- 'ERROR: GitHub repository (-u) must be specified.\n' >&2
+    return 12
+fi
+
+############################################################################
+#
+# Function Logic
+#
+############################################################################
+printf -- '%s\n' "${h1}"
+printf -- '%s\n' "${h1}"
+printf -- '%s %s\n' "${hs}" "Fetch GitHub Latest Release Tag"
+printf -- '%s\n' "${h1}"
+printf -- '%s\n' "${h1}"
+
+unset GITHUB_LATEST_RELEASE_TAG
+
+printf -- '\n'
+printf -- '%s\n' "${h1}"
+printf -- '%s %s\n' "${hs}" "Execution information"
+printf -- '%s\n' "${h1}"
+printf -- 'User:        "%s"\n' "${githubUser}"
+printf -- 'Repository:  "%s"\n' "${githubRepo}"
+
+printf -- '\n'
+printf -- '%s\n' "${h1}"
+printf -- '%s %s\n' "${hs}" "Get API Response"
+printf -- '%s\n' "${h1}"
+curlParameters=('--fail' '-s' '-S')
+
+if [[ "${tFlag}" == 'true' ]]; then
+    curlParameters+=('--header' "Authorization: token ${githubToken}")
+fi
+
+curlParameters+=("https://api.github.com/repos/${githubUser}/${githubRepo}/releases/latest")
+
+if ! apiResponse="$(curl "${curlParameters[@]}")"; then
+    printf -- 'ERROR: Failed calling GitHub API\n' >&2
+    printf -- 'ERROR: API Response:\n' >&2
+    printf -- '%s' "${apiResponse}" >&2
+
+    return 31
+fi
+
+printf -- 'Done.\n'
+
+printf -- '\n'
+printf -- '%s\n' "${h1}"
+printf -- '%s %s\n' "${hs}" "Determine latest release"
+printf -- '%s\n' "${h1}"
+
+if command -v 'jq' 1>/dev/null 2>&1; then
+    # Process with 'jq' if it is available, as this is more reliable
+    latestTag="$(printf -- '%s' "${apiResponse}"  | jq -r '.tag_name')"
+else
+    latestTag="$(printf -- '%s' "${apiResponse}"  | grep '"tag_name":' | cut -d '"' -f 4)"
+fi
+
+if [[ -z "${latestTag}" ]]; then
+    printf -- 'ERROR: Could not determine latest tag.\n' >&2
+    return 32
+fi
+
+printf -- '%s\n' "${latestTag}"
+
+export GITHUB_LATEST_RELEASE_TAG="${latestTag}"
