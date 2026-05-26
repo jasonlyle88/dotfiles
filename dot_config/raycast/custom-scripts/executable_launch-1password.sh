@@ -17,4 +17,4 @@ if ! pgrep -x -- '1Password' >/dev/null 2>&1; then
     open -a '1password' --args --silent
 fi
 
-op account get >/dev/null 2>&1
+OP_SERVICE_ACCOUNT_TOKEN='' op account get >/dev/null 2>&1
