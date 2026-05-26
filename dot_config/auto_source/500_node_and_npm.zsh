@@ -1,11 +1,8 @@
 # shellcheck shell=bash
 
 ################################################################################
-# Setup PlistBuddy
+# Setup Node and NPM settings
 ################################################################################
 
-if [[ ! -x '/usr/libexec/PlistBuddy' ]]; then
-    return 0
-fi
-
-alias PlistBuddy='/usr/libexec/PlistBuddy'
+export NODE_REPL_HISTORY="${XDG_DATA_HOME}/node/repl_history"
+export NPM_CONFIG_USERCONFIG="${XDG_CONFIG_HOME}/npm/config"

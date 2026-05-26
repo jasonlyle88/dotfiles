@@ -1,11 +1,7 @@
 # shellcheck shell=bash
 
 ################################################################################
-# Setup PlistBuddy
+# Setup less settings
 ################################################################################
 
-if [[ ! -x '/usr/libexec/PlistBuddy' ]]; then
-    return 0
-fi
-
-alias PlistBuddy='/usr/libexec/PlistBuddy'
+export LESSHISTFILE="${XDG_STATE_HOME}/less/history"

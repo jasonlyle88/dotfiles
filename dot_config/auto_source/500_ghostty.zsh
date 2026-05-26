@@ -1,11 +1,10 @@
 # shellcheck shell=bash
 
 ################################################################################
-# Setup PlistBuddy
+# Setup GhosTTY Shell integrations
 ################################################################################
 
-if [[ ! -x '/usr/libexec/PlistBuddy' ]]; then
-    return 0
+# GhosTTY Shell integrations
+if [[ -n $GHOSTTY_RESOURCES_DIR ]]; then
+    source "$GHOSTTY_RESOURCES_DIR"/shell-integration/zsh/ghostty-integration
 fi
-
-alias PlistBuddy='/usr/libexec/PlistBuddy'

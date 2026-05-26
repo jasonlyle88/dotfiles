@@ -1,11 +1,9 @@
 # shellcheck shell=bash
 
 ################################################################################
-# Setup PlistBuddy
+# Setup ZSH Help
 ################################################################################
 
-if [[ ! -x '/usr/libexec/PlistBuddy' ]]; then
-    return 0
-fi
-
-alias PlistBuddy='/usr/libexec/PlistBuddy'
+autoload run-help
+export HELPDIR=/usr/share/zsh/"${ZSH_VERSION}"/help
+alias help=run-help

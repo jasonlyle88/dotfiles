@@ -9,7 +9,7 @@ if ! command -v starship 1>/dev/null 2>&1; then
     printf '################################################################################\n'
     printf '# Install starship\n'
     printf '################################################################################\n'
-    curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "${HOME}/.local/bin"
+    curl -sS https://starship.rs/install.sh | sh -s -- --yes --bin-dir "${XDG_BIN_HOME}"
 fi
 
 # Exit if starship still not available
