@@ -1,0 +1,7 @@
+[tools]
+"aqua:oracle.com/sqlcl" = "26.1.2.132.1334"
+java = "temurin-21"
+liquibase = "latest"
+node = "lts"
+python = "3"
+usage = "latest"
