@@ -24,3 +24,26 @@ eval "$(mise activate zsh)"
 if [[ ! -f "${XDG_DATA_HOME}/zsh/site-functions/_mise" ]]; then
     mise completion zsh  > "${XDG_DATA_HOME}/zsh/site-functions/_mise"
 fi
+
+# Wrapper function to enforce a default file for 'mise set' and 'mise use'
+mise() {
+    # Check if the first argument is 'set'
+    # Check if there are more than one arguments (to ensure there's something after 'set')
+    # Check if the '--file' option is not present in the arguments
+    if [[ "$1" == "set" ]] && [[ $# -gt 1 ]] && ! [[ " $* " =~ " --file[ =]?" ]]; then
+        shift
+        command mise set --file "${XDG_CONFIG_HOME}/mise/conf.d/500-env.toml" "$@"
+    # Check if the first argument is 'use'
+    # Check if the '--path' or '-p' option is not present in the arguments
+    elif [[ "$1" == "use" ]] && ! [[ " $* " =~ " --path[ =]?" || " $* " =~ " -p[ =]?" ]]; then
+        shift
+        command mise use --path "${XDG_CONFIG_HOME}/mise/conf.d/900-tools.toml" "$@"
+    # Check if the first argument is 'unuse'
+    # Check if the '--path' or '-p' option is not present in the arguments
+    elif [[ "$1" == "unuse" ]] && ! [[ " $* " =~ " --path[ =]?" || " $* " =~ " -p[ =]?" ]]; then
+        shift
+        command mise unuse --path "${XDG_CONFIG_HOME}/mise/conf.d/900-tools.toml" "$@"
+    else
+        command mise "$@"
+    fi
+}
