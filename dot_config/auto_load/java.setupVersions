@@ -3,55 +3,134 @@
 ############################################################################
 ## Configurable variables
 ############################################################################
-local -a javaAddIns=("$(dirname "$(mise where java)")")
+local -a javaAddIns
 local systemJavaDirectory="/Library/Java/JavaVirtualMachines"
-local javaHomeSubdirectory="/Contents/Home"
+
+javaAddIns=("$(dirname "$(mise where java)")")
 
 ############################################################################
 ## Procedural variables
 ############################################################################
 local headerFull="--------------------------------------------------------------------------------"
+local headerSub="------------------------------------------------------------"
 local headerText="--"
+local javaAddIn
+local javaDirectory
 local javaName
-local javaBinary
+local targetWrapper
+local targetContents
+local currentTarget
+local count
 
 printf -- '%s\n' "${headerFull}"
-printf -- '%s Ensure write access\n' "${headerText}"
+printf -- '%s Setup Java Versions in macOS System Java Directory\n' "${headerText}"
 printf -- '%s\n' "${headerFull}"
+printf -- '\n'
+
+printf -- '%s\n' "${headerSub}"
+printf -- '%s Ensure write access\n' "${headerText}"
+printf -- '%s\n' "${headerSub}"
 if touch "${systemJavaDirectory}" 1>/dev/null 2>&1; then
     printf -- 'Write access to %s is available\n' "${systemJavaDirectory}"
 else
     printf -- 'Write access to %s is not available\n' "${systemJavaDirectory}" >&2
-    exit 1
+    return 1
 fi
 printf -- '\n'
 
-printf -- '%s\n' "${headerFull}"
-printf -- '%s Cleanup Java add-ins\n' "${headerText}"
-printf -- '%s\n' "${headerFull}"
+printf -- '%s\n' "${headerSub}"
+printf -- '%s Insert/Update Java add-ins\n' "${headerText}"
+printf -- '%s\n' "${headerSub}"
+count=0
+# Loop over all directories from which we want to add java
 for javaAddIn in "${javaAddIns[@]}"; do
-    find "${javaAddIn}/"* -type d -maxdepth 0 -print | \
-    sed "s|^${javaAddIn}|${systemJavaDirectory}|" | \
-    tee /dev/tty | \
-    xargs rm -rf "{}"
-done
-printf "\n"
-
-printf -- '%s\n' "${headerFull}"
-printf -- '%s Insert Java add-ins\n' "${headerText}"
-printf -- '%s\n' "${headerFull}"
-for javaAddIn in "${javaAddIns[@]}"; do
-    IFS=""
-    exec 3< <(find "${javaAddIn}/"* -type d -maxdepth 0)
-    while read -r javaDirectory <&3 || [ -n "${javaDirectory}" ]
-    do
+    # Loop over all java instances in the current add-in directory
+    for javaDirectory in "${javaAddIn}"/*(/N); do
+        # Get the last path component of the javaDirectory that represents the name of the java version
         javaName="$(basename "${javaDirectory}")"
+        # Build the expected target paths in the system Java directory
+        targetWrapper="${systemJavaDirectory}/${javaName}"
+        # Build the expected target path for the Contents directory within the wrapper
+        targetContents="${targetWrapper}/Contents"
 
-        printf -- 'Adding: "%s"...\n' "${javaName}"
+        # Check if the targetContents already exists and is a symlink
+        if [[ -L "${targetContents}" ]]; then
+            # Get the absolute path of the current target of the symlink
+            currentTarget="$(readlink -f "${targetContents}")"
 
-        mkdir "${systemJavaDirectory}/${javaName}"
-        ln -s "${javaDirectory}/Contents" "${systemJavaDirectory}/${javaName}/Contents"
+            if [[ "${currentTarget}" == "${javaDirectory}/Contents" ]]; then
+                # The target is already correct, so skip to the next one
+                continue
+            fi
 
+            printf 'Updating: %s\n' "${javaName}"
+            rm -f "${targetContents}"
+        elif [[ -e "${targetContents}" ]]; then
+            printf 'Skipping %s: %s exists but is not a symlink\n' "${javaName}" "${targetContents}" >&2
+            continue
+        else
+            printf 'Adding: %s\n' "${javaName}"
+            mkdir -p "${targetWrapper}"
+        fi
+
+        # Create the symlink to the Contents directory of the java version
+        ln -s "${javaDirectory}/Contents" "${targetContents}"
+        ((count++))
     done
 done
+
+if [[ ${count} -eq 0 ]]; then
+    printf -- 'No Java add-ins needed to be inserted or updated.\n'
+fi
+
 printf -- '\n'
+
+printf -- '%s\n' "${headerSub}"
+printf -- '%s Cleanup Java add-ins\n' "${headerText}"
+printf -- '%s\n' "${headerSub}"
+count=0
+for targetWrapper in "${systemJavaDirectory}"/*(/N); do
+    # Build the expected target path for the Contents directory within the wrapper
+    targetContents="${targetWrapper}/Contents"
+
+    # Only consider entries that are symlinks to a Contents directory
+    [[ -L "${targetContents}" ]] || continue
+
+    # Get the absolute path of the current target of the symlink
+    currentTarget="$(readlink -f "${targetContents}")"
+
+    local isManaged=false
+    local stillExists=false
+
+    # Check if the current target of the symlink matches any of the java directories managed by this script
+    for javaAddIn in "${javaAddIns[@]}"; do
+        # if [[ "${currentTarget}" == "${javaAddIn}"/*/Contents ]]; then
+        if [[ "$(dirname "${currentTarget}")" == "${javaAddIn}" ]]; then
+            isManaged=true
+            break
+        fi
+    done
+
+    # test "/Users/jlyle/.local/share/mise/installs/java/microsoft-25.0.1" == "/Users/jlyle/.local/share/mise/installs/java"
+
+    # Only consider entries that are managed by this script
+    [[ "${isManaged}" == true ]] || continue
+
+    # Check if the current target still exists
+    if [[ -d "${currentTarget}" ]]; then
+        stillExists=true
+    fi
+
+    # If the target does not exist anymore, remove the wrapper
+    if [[ "${stillExists}" == false ]]; then
+        printf 'Removing stale: %s\n' "${targetWrapper:t}"
+        rm -rf "${targetWrapper}"
+        ((count++))
+    fi
+done
+
+if [[ ${count} -eq 0 ]]; then
+    printf -- 'No stale Java add-ins needed to be removed.\n'
+fi
+
+printf "\n"

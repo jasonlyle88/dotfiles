@@ -6,7 +6,7 @@ compile = false
 
 [tools]
 "aqua:oracle.com/sqlcl" = "26.1.2.132.1334"
-java = "temurin-21"
+java = "oracle-graalvm-17"
 liquibase = "latest"
 node = "lts"
 python = "3"

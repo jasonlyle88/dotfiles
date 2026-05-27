@@ -219,11 +219,11 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_JAVA} -eq 1 
         mise ls-remote java@microsoft | sed 's/^/java@/'
     ) | grep --invert-match -- '-jre-' | grep -vFf <(mise ls --no-header java | awk '{print $2}') | xargs mise install
 
-    mise use -g java@temurin-21
-fi
+    mise use -g java@oracle-graalvm-17
 
-if command -v 'java.SetupVersions' 1>/dev/null 2>&1; then
-    java.SetupVersions
+    if which 'java.setupVersions' 1>/dev/null 2>&1; then
+        java.setupVersions
+    fi
 fi
 
 ############################################################################
