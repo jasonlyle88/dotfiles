@@ -1,0 +1,46 @@
+##
+##  zsh-utils
+##
+belak/zsh-utils path:editor
+belak/zsh-utils path:prompt
+belak/zsh-utils path:utility
+belak/zsh-utils path:completion
+
+##
+##  zsh-users
+##
+zsh-users/zsh-completions
+zsh-users/zsh-autosuggestions
+zsh-users/zsh-syntax-highlighting
+zsh-users/zsh-history-substring-search
+
+##
+## Benchmarking the shell
+##
+romkatv/zsh-bench kind:path
+
+##
+## Easily go back a directory
+##
+Tarrasch/zsh-bd
+
+##
+## oh-my-zsh plugins
+##
+getantidote/use-omz
+ohmyzsh/ohmyzsh path:lib/termsupport.zsh
+ohmyzsh/ohmyzsh path:plugins/git
+ohmyzsh/ohmyzsh path:plugins/macos conditional:is-macos
+ohmyzsh/ohmyzsh path:plugins/tmux conditional:has-tmux
+
+##
+## Remind me to use aliases
+##
+MichaelAquilina/zsh-you-should-use
+
+##
+##  Personal plugins
+##
+jasonlyle88/zsh-execute-after-command
+jasonlyle88/zsh-apprise
+jasonlyle88/sqlcl-utilities
