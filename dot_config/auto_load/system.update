@@ -135,7 +135,7 @@ if command -v 'mise' 1>/dev/null 2>&1; then
     printf -- '%s %s\n' "${hs}" "Usage"
     printf -- '%s\n' "${h2}"
 
-    mise use -g usage@latest
+    mise use usage@latest
 fi
 
 ############################################################################
@@ -175,7 +175,7 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_SQLCL} -eq 1
     else
         # Install the latest version of Oracle SQLcl
         printf 'Installing Oracle SQLcl version %s.\n' "${latestVersionString}"
-        mise use -g aqua:oracle.com/sqlcl@"${latestVersionString}"
+        mise use aqua:oracle.com/sqlcl@"${latestVersionString}"
     fi
 
     unset latestVersionString
@@ -200,7 +200,7 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_LIQUIDBASE} 
         -e 'liquibase@4.32.1' \
     | grep -vFf <(mise ls --no-header liquibase | awk '{print $2}') | xargs mise install
 
-    mise use -g liquibase@latest
+    mise use liquibase@latest
 fi
 
 ############################################################################
@@ -219,7 +219,7 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_JAVA} -eq 1 
         mise ls-remote java@microsoft | sed 's/^/java@/'
     ) | grep --invert-match -- '-jre-' | grep -vFf <(mise ls --no-header java | awk '{print $2}') | xargs mise install
 
-    mise use -g java@oracle-graalvm-17
+    mise use java@oracle-graalvm-17
 
     if which 'java.setupVersions' 1>/dev/null 2>&1; then
         java.setupVersions
@@ -239,7 +239,7 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_NODE} -eq 1 
         mise ls-remote node | awk -F '.' '$1 >= 16' | sed 's/^/node@/'
     ) | grep -vFf <(mise ls --no-header node | awk '{print $2}') | xargs mise install
 
-    mise use -g node@lts
+    mise use node@lts
 fi
 
 ############################################################################
@@ -312,7 +312,7 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_PYTHON} -eq 
             -e 'python@3.13.1' \
     | grep -vFf <(mise ls --no-header python | awk '{print $2}') | xargs mise install
 
-    mise use -g python@3
+    mise use python@3
 fi
 
 ############################################################################
