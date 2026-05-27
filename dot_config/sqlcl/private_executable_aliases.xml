@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<aliases>
+    <alias name="listUsers">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql>
+                    <![CDATA[@~/.sqlcl/aliasScripts/listUsers/listUsers.sql
+alias listUsersAll=@~/.sqlcl/aliasScripts/listUsersAll.sql
+alias invalid=@~/.sqlcl/aliasScripts/invalid.sql]]>
+                </sql>
+            </query>
+        </queries>
+    </alias>
+    <alias name="invalidAll">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql>
+                    <![CDATA[@~/.sqlcl/aliasScripts/invalidAll.sql]]>
+                </sql>
+            </query>
+        </queries>
+    </alias>
+    <alias name="resetdb">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql>
+                    <![CDATA[@~/.sqlcl/aliasScripts/dropAll.sql]]>
+                </sql>
+            </query>
+        </queries>
+    </alias>
+    <alias name="check_acdc">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql>
+                    <![CDATA[@~/.sqlcl/aliasScripts/checkACDCObjects.sql]]>
+                </sql>
+            </query>
+        </queries>
+    </alias>
+</aliases>
