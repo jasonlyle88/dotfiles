@@ -9,7 +9,7 @@ if ! command -v bat 1>/dev/null 2>&1; then
 fi
 
 # Replace cat with bat, retaining no lines or pager
-alias cat='bat --plain --paging=never'
+alias cat='bat --style grid,header-filename --paging=never'
 alias rcat='command cat'
 
 # Replace man with a bat-powered man
