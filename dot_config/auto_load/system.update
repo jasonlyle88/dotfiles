@@ -141,7 +141,7 @@ fi
 ############################################################################
 # SQLcl
 ############################################################################
-if command -v 'mise' 1>/dev/null 2>&1; then
+if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_SQLCL} -eq 1 ]]; then
     printf -- '\n'
     printf -- '%s\n' "${h2}"
     printf -- '%s %s\n' "${hs}" "SQLcl"
@@ -184,7 +184,7 @@ fi
 ############################################################################
 # Liquibase
 ############################################################################
-if command -v 'mise' 1>/dev/null 2>&1; then
+if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_LIQUIDBASE} -eq 1 ]]; then
     printf -- '\n'
     printf -- '%s\n' "${h2}"
     printf -- '%s %s\n' "${hs}" "Liquibase"
@@ -206,7 +206,7 @@ fi
 ############################################################################
 # Java
 ############################################################################
-if command -v 'mise' 1>/dev/null 2>&1; then
+if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_JAVA} -eq 1 ]]; then
     printf -- '\n'
     printf -- '%s\n' "${h2}"
     printf -- '%s %s\n' "${hs}" "Java"
@@ -229,7 +229,7 @@ fi
 ############################################################################
 # Node
 ############################################################################
-if command -v 'mise' 1>/dev/null 2>&1; then
+if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_NODE} -eq 1 ]]; then
     printf -- '\n'
     printf -- '%s\n' "${h2}"
     printf -- '%s %s\n' "${hs}" "Node"
@@ -264,7 +264,7 @@ fi
 ############################################################################
 # Python
 ############################################################################
-if command -v 'mise' 1>/dev/null 2>&1; then
+if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_PYTHON} -eq 1 ]]; then
     printf -- '\n'
     printf -- '%s\n' "${h2}"
     printf -- '%s %s\n' "${hs}" "Python"
