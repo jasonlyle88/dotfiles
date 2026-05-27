@@ -222,6 +222,7 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_JAVA} -eq 1 
     mise use java@oracle-graalvm-17
 
     if which 'java.setupVersions' 1>/dev/null 2>&1; then
+        printf -- '\n'
         java.setupVersions
     fi
 fi
@@ -312,7 +313,7 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_PYTHON} -eq 
             -e 'python@3.13.1' \
     | grep -vFf <(mise ls --no-header python | awk '{print $2}') | xargs mise install
 
-    mise use python@3
+    mise use python@latest
 fi
 
 ############################################################################
