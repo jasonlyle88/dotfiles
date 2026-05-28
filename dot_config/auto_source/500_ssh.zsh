@@ -4,6 +4,10 @@
 # Setup SSH helpers
 ################################################################################
 
+############################################################
+# Setup PKCS11 provider for hardware token support in agent
+############################################################
+
 if [[ -e '/opt/homebrew/lib/libykcs11.dylib' ]]; then
     # M-series yubico-piv-tool from brew PKCS11 provider
     export SSH_PKCS11_PROVIDER_LIBRARY='/opt/homebrew/lib/libykcs11.dylib'
@@ -19,9 +23,93 @@ if [[ -n "${SSH_PKCS11_PROVIDER_LIBRARY}" ]]; then
     export SSH_PKCS11_PROVIDER_LIBRARY="$(unlinkLib "${SSH_PKCS11_PROVIDER_LIBRARY}")"
 fi
 
-################################################################################
+
+############################################################
+##  SSH Helper functions
+############################################################
+
+export SSH_CONTROL_MASTER_DIRECTORY="${XDG_STATE_HOME}/ssh/cm"
+
+ssh.aliases() {
+    awk '
+        tolower($1) == "host" {
+            for (i = 2; i <= NF; i++) {
+                if ($i == "#") break
+                if ($i !~ /[*?]/) {
+                    print $i
+                }
+            }
+        }
+    ' "${HOME}/.ssh/config"
+}
+
+ssh.controlPaths() {
+    local sshAlias line hostname controlPath
+
+    while IFS= read -r sshAlias; do
+        hostname=""
+        controlPath=""
+
+        while IFS= read -r line; do
+            case "${line}" in
+                hostname\ *)    hostname="${line#hostname }" ;;
+                controlpath\ *) controlPath="${line#controlpath }" ;;
+            esac
+        done < <(ssh -G "${sshAlias}" 2>/dev/null | grep -E '^(hostname|controlpath) ')
+
+        if [[ -n "${controlPath}" ]]; then
+            printf '%s\t%s\t%s\n' "${sshAlias}" "${hostname}" "${controlPath}"
+        fi
+    done < <(ssh.aliases)
+}
+
+ssh.connection.check() {
+    local sshHostName="${1}"
+
+    if ssh -O "check" "${sshHostName}" 1>/dev/null 2>&1; then
+        printf -- "Connection is open\n"
+        return 0
+    else
+        printf -- "Connection is not open\n"
+        return 1
+    fi
+}
+
+ssh.connection.kill() {
+    local sshHostName="${1}"
+
+    ssh -O "exit" "${sshHostName}"
+}
+
+ssh.connection.list() {
+    local sshAlias hostname controlPath knownControlPath
+
+    knownControlPath=""
+
+    while IFS=$'\t' read -r sshAlias hostname controlPath; do
+        knownControlPath="${knownControlPath}${controlPath}"$'\t'
+
+        if ssh -O check "${sshAlias}" >/dev/null 2>&1; then
+            printf '%-50s%s\n' "${sshAlias}" "${controlPath}"
+        fi
+    done < <(ssh.controlPaths)
+
+    if [[ -d "${SSH_CONTROL_MASTER_DIRECTORY}" ]]; then
+        while IFS= read -r controlPath; do
+            if
+                [[ "${knownControlPath}" != *"${controlPath}"$'\t'* ]] &&
+                ssh -O check -S "${controlPath}" dummy >/dev/null 2>&1
+            then
+                printf '%-50s%s\n' 'Unknown' "${controlPath}"
+            fi
+        done < <(find "${SSH_CONTROL_MASTER_DIRECTORY}" -type s 2>/dev/null)
+    fi
+}
+
+
+############################################################
 ##  Manage hardware token with SSH agent
-################################################################################
+############################################################
 ssh.pkcs11.load() {
     ssh-add -s "${SSH_PKCS11_PROVIDER_LIBRARY}"
 }
@@ -35,9 +123,10 @@ ssh.pkcs11.reload() {
     ssh.pkcs11.load
 }
 
-################################################################################
+############################################################
 ##  Manage SSH tunnels
-################################################################################
+############################################################
+
 ssh.tunnel.start() {
     local sshHostName="${1}"
 
@@ -45,39 +134,19 @@ ssh.tunnel.start() {
 }
 
 ssh.tunnel.check() {
-    local sshHostName="${1}"
-
-    if ssh -O "check" "${sshHostName}" 1>/dev/null 2>&1; then
-        printf "Tunnel is open\n"
-    else
-        printf "Tunnel is not open\n"
-    fi
+    ssh.connection.check "$@"
 }
 
 ssh.tunnel.kill() {
-    local sshHostName="${1}"
-
-    ssh -O "exit" "${sshHostName}"
+    ssh.connection.kill "$@"
 }
 
 ssh.tunnel.restart() {
     local sshHostName="${1}"
 
-    if ssh.tunnel.check "${sshHostName}" 1>/dev/null 2>&1; then
-        ssh.tunnel.kill "${sshHostName}"
+    if ssh.connection.check "${sshHostName}" 1>/dev/null 2>&1; then
+        ssh.connection.kill "${sshHostName}"
     fi
 
     ssh.tunnel.start "${sshHostName}"
 }
-
-ssh.tunnel.list() {
-    local tunnelDirectory="${HOME}/.ssh/tunnels"
-    local tunnelCount="$(ll "${tunnelDirectory}" | wc -l )"
-
-    printf -- "Tunnel count: %d\n" "${tunnelCount}"
-    if [[ "${tunnelCount}" -gt 0 ]]; then
-        printf -- "\n"
-        ll "${tunnelDirectory}"
-    fi
-}
-alias lltunnel="ssh.tunnel.list"
