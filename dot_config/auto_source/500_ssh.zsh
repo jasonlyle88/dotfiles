@@ -150,3 +150,25 @@ ssh.tunnel.restart() {
 
     ssh.tunnel.start "${sshHostName}"
 }
+
+############################################################
+##  Completions for previous functions
+############################################################
+
+if [[ -n "${ZSH_VERSION:-}" ]]; then
+    compdef ssh.connection.check=ssh
+    compdef ssh.connection.kill=ssh
+    compdef ssh.tunnel.start=ssh
+    compdef ssh.tunnel.check=ssh
+    compdef ssh.tunnel.kill=ssh
+    compdef ssh.tunnel.restart=ssh
+fi
+
+if [[ -n "${BASH_VERSION:-}" ]]; then
+    complete -F _ssh ssh.connection.check
+    complete -F _ssh ssh.connection.kill
+    complete -F _ssh ssh.tunnel.start
+    complete -F _ssh ssh.tunnel.check
+    complete -F _ssh ssh.tunnel.kill
+    complete -F _ssh ssh.tunnel.restart
+fi
