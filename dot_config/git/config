@@ -3,6 +3,8 @@
     name = Jason Lyle
 [core]
 	excludesfile = ~/.config/git/ignore
+[init]
+	defaultBranch = main
 [pull]
     rebase = false
 [fetch]
