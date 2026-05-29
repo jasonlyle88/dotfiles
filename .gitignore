@@ -3,18 +3,29 @@ chezmoi-key.txt
 *~
 *.swp
 *.swo
+.DS_Store
 
 # Don't bakcup generated files
 dot_config/auto_source/900_*
 
-# Don't backup 1password file unencrypted
-dot_config/auto_source/*_490_1password_cli.zsh
-dot_config/auto_source/490_1password_cli.zsh
+# Don't backup apprise config as plain text
+dot_config/apprise/apprise.yml
+dot_config/apprise/*_apprise.yml
+dot_config/apprise/apprise.yaml
+dot_config/apprise/*_apprise.yaml
 
-# Don't backup SSH keys as plain text
-private_dot_ssh/*.key
-!private_dot_ssh/encrypted_*.key.age
+# Don't backup 1password file unencrypted
+dot_config/auto_source/*_1password_cli.zsh
 
 # Don't backup oracle wallets as plain text
 dot_config/oracle/wallets/*.zip
-!dot_config/oracle/wallets/encrypted_*.zip.age
+
+# Don't backup any SSH control masters
+dot_local/state/ssh/private_cm/*
+
+# Don't backup SSH keys as plain text
+private_dot_ssh/*.key
+
+# Always allow .keep
+# Should be at the end of the file
+!.keep
