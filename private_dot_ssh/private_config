@@ -1,0 +1,25 @@
+################################################################################
+################################################################################
+# SSH Config
+#
+# Controls SSH behavior and create SSH aliases
+#
+# First instance of a setting takes precedence, so set specific items then
+# generic items/wildcard tiems
+#
+# Imports are done from the config.d directory in alphabetical order
+#
+# Keys creation:
+#   ssh-keygen \
+#       -t ed25519 \
+#       -a 100 \
+#       -C "jason.lyle88+pendragon+20260513@gmail.com" \
+#       -f "${HOME}\.ssh\personal-pendragon-20260513.key"
+# where the comment specifies a work or personal email address and + symbols to
+# separate host and creation date. Similar setup for file name, but with dashes.
+# When creating new keys, check what current best practices for keys are at the
+# time.
+################################################################################
+################################################################################
+
+Include ~/.ssh/config.d/*.conf
