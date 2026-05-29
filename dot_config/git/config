@@ -1,6 +1,8 @@
 [user]
     email = jason.lyle88@gmail.com
     name = Jason Lyle
+[core]
+	excludesfile = ~/.config/git/ignore
 [pull]
     rebase = false
 [fetch]
