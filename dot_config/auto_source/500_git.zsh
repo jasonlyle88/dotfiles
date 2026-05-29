@@ -223,3 +223,38 @@ git.initBranch() {
     fi
 
 }
+
+################################################################################
+# Setup git clone autocompletion based on ssh aliases
+################################################################################
+
+# Load git completion now, so _git exists.
+autoload -Uz +X _git
+
+# Save the original git completer once.
+if (( $+functions[_git] && ! $+functions[_git-original] )); then
+    functions[_git-original]=$functions[_git]
+fi
+
+_git_clone_ssh_hosts() {
+    local -a ssh_hosts
+    ssh_hosts=("${(@f)$(ssh.aliases)}")
+
+    compadd -S ':' -d ssh_hosts -- "${ssh_hosts[@]}"
+}
+
+_git() {
+    local ret=1
+
+    # Preserve normal git completion.
+    _git-original "$@" && ret=0
+
+    # Add ssh config aliases only for: git clone <TAB>
+    if [[ "${words[1]}" == "git" && "${words[2]}" == "clone" && "${CURRENT}" -eq 3 ]]; then
+        _git_clone_ssh_hosts && ret=0
+    fi
+
+    return ret
+}
+
+compdef _git git
