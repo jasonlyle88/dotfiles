@@ -3,4 +3,10 @@ chezmoi-key.txt
 *~
 *.swp
 *.swo
+
+# Don't bakcup generated files
 dot_config/auto_source/900_*
+
+# Don't backup SSH keys as plain text
+private_dot_ssh/*.key
+!private_dot_ssh/encrypted_*.key.age
