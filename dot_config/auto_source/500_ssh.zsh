@@ -40,7 +40,7 @@ ssh.aliases() {
                 }
             }
         }
-    ' "${HOME}/.ssh/config"
+    ' "${HOME}/.ssh/config" "${HOME}/.ssh/config.d"/* 2>/dev/null
 }
 
 ssh.controlPaths() {
