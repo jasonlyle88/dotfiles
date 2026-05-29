@@ -7,6 +7,14 @@ chezmoi-key.txt
 # Don't bakcup generated files
 dot_config/auto_source/900_*
 
+# Don't backup 1password file unencrypted
+dot_config/auto_source/*_490_1password_cli.zsh
+dot_config/auto_source/490_1password_cli.zsh
+
 # Don't backup SSH keys as plain text
 private_dot_ssh/*.key
 !private_dot_ssh/encrypted_*.key.age
+
+# Don't backup oracle wallets as plain text
+dot_config/oracle/wallets/*.zip
+!dot_config/oracle/wallets/encrypted_*.zip.age
