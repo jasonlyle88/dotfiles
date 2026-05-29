@@ -224,37 +224,33 @@ git.initBranch() {
 
 }
 
+
+
 ################################################################################
 # Setup git clone autocompletion based on ssh aliases
 ################################################################################
 
-# Load git completion now, so _git exists.
+# Force load _git so that it initializes the other completion functions
 autoload -Uz +X _git
-
-# Save the original git completer once.
-if (( $+functions[_git] && ! $+functions[_git-original] )); then
-    functions[_git-original]=$functions[_git]
-fi
+_git &>/dev/null
 
 _git_clone_ssh_hosts() {
     local -a ssh_hosts
     ssh_hosts=("${(@f)$(ssh.aliases)}")
-
-    compadd -S ':' -d ssh_hosts -- "${ssh_hosts[@]}"
+    compadd -S ':' -- "${ssh_hosts[@]}"
 }
 
-_git() {
-    local ret=1
+# Prefer native git clone completion if available.
+# Some systems define _git-clone, and it already completes SSH config aliases.
+if (( ! $+functions[_git-clone] && $+functions[_git_clone] )); then
+    functions -c _git_clone _git_clone_original
 
-    # Preserve normal git completion.
-    _git-original "$@" && ret=0
-
-    # Add ssh config aliases only for: git clone <TAB>
-    if [[ "${words[1]}" == "git" && "${words[2]}" == "clone" && "${CURRENT}" -eq 3 ]]; then
+    _git_clone() {
+        local ret=1
+        _git_clone_original "$@" && ret=0
         _git_clone_ssh_hosts && ret=0
-    fi
-
-    return ret
-}
+        return ret
+    }
+fi
 
 compdef _git git
