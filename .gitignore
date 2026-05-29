@@ -1,9 +1,5 @@
+# Do not commit age encryption key as plain text
 chezmoi-key.txt
-*.age.tmp
-*~
-*.swp
-*.swo
-.DS_Store
 
 # Don't bakcup generated files
 dot_config/auto_source/900_*
