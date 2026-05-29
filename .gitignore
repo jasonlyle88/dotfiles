@@ -3,4 +3,4 @@ chezmoi-key.txt
 *~
 *.swp
 *.swo
-auto_source/900_*
+auto_source/*900_*
