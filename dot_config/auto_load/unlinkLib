@@ -36,25 +36,36 @@ if [[ -z "${_unlinkLibSetupDone}" ]]; then
     _unlinkLibSetupDone=1
 fi
 
-libFile="$1"
-libFile="$(readlink -f "${libFile}")"
-libFilename="$(basename -- "${libFile}")"
-unlinklibFile="${UNLINK_LIB_DIRECTORY:?}/${libFilename}"
+local originalLibFile originalLibFilename absoluteLibFile absoluteLibFilename unlinkedAbsoluteLibFile
+
+originalLibFile="$1"
+originalLibFilename="$(basename -- "${originalLibFile}")"
+unlinkedOriginalLibFile="${UNLINK_LIB_DIRECTORY:?}/${originalLibFilename}"
+absoluteLibFile="$(readlink -f "${originalLibFile}")"
+absoluteLibFilename="$(basename -- "${absoluteLibFile}")"
+unlinkedAbsoluteLibFile="${UNLINK_LIB_DIRECTORY:?}/${absoluteLibFilename}"
+
 
 if
-    [[ ! -f "${unlinklibFile}" ]] || # create the unlinked library file
-    [[ "${libFile}" -nt "${unlinklibFile}" ]] # Update the unlinked library file
+    [[ ! -f "${unlinkedAbsoluteLibFile}" ]] || # create the unlinked library file
+    [[ "${absoluteLibFile}" -nt "${unlinkedAbsoluteLibFile}" ]] # Update the unlinked library file
 then
 
     # Remove the old version and source symlink (if they exist)
-    rm -rf "${unlinklibFile}"
-    rm -rf "${unlinklibFile}.source"
+    rm -rf "${unlinkedAbsoluteLibFile}"
+    rm -rf "${unlinkedAbsoluteLibFile}.source"
+    if [[ "${originalLibFilename}" != "${absoluteLibFilename}" ]]; then
+        rm -rf "${unlinkedOriginalLibFile}"
+    fi
 
     # Create a copy of the library and a symlink with the same name
     # to keep a record of its original source
-    cp -aL "${libFile}" "${unlinklibFile}"
-    ln -s "${libFile}" "${unlinklibFile}.source"
+    cp -aL "${absoluteLibFile}" "${unlinkedAbsoluteLibFile}"
+    ln -s "${absoluteLibFile}" "${unlinkedAbsoluteLibFile}.source"
+    if [[ "${originalLibFilename}" != "${absoluteLibFilename}" ]]; then
+        ln -s "${unlinkedAbsoluteLibFile}" "${unlinkedOriginalLibFile}"
+    fi
 
 fi
 
-printf -- '%s\n' "${unlinklibFile}"
+printf -- '%s\n' "${unlinkedOriginalLibFile}"
