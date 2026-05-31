@@ -147,10 +147,8 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_SQLCL} -eq 1
     printf -- '%s %s\n' "${hs}" "SQLcl"
     printf -- '%s\n' "${h2}"
 
-    # My old script, can remove after testing with mise for a while
-    # sqlclUpdater -l
-
     # Get the latest version of Oracle SQLcl
+    local sqlclVersionsFile="$SQLPATH/mise_sqlcl_versions.txt"
     local latestVersionString
     latestVersionString="$(curl -sL -r 0-1000 https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip | \
         grep -aoE "sqlcl/([0-9]+\.?)+" | \
@@ -169,15 +167,17 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_SQLCL} -eq 1
         return 1
     fi
 
-    if mise ls aqua:oracle.com/sqlcl | grep -q "${latestVersionString}"; then
-        # Check if version is already installed
-        printf 'Oracle SQLcl version %s is already installed.\n' "${latestVersionString}"
-    else
-        # Install the latest version of Oracle SQLcl
-        printf 'Installing Oracle SQLcl version %s.\n' "${latestVersionString}"
-        mise use -g aqua:oracle.com/sqlcl@"${latestVersionString}"
+    # Check if version already added to versions file
+    if ! grep "${latestVersionString}" "${sqlclVersionsFile}"; then
+        printf '%s\n' "${latestVersionString}" >> "${sqlclVersionsFile}"
     fi
 
+    cat "${sqlclVersionsFile}" | sed 's|^|aqua:oracle.com/sqlcl@|' \
+    | grep -vFf <(mise ls --no-header aqua:oracle.com/sqlcl | awk '{print $2}') | xargs mise install
+
+    mise use -g aqua:oracle.com/sqlcl@"${latestVersionString}"
+
+    unset sqlclVersionsFile
     unset latestVersionString
 fi
 
