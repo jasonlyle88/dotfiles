@@ -15,7 +15,8 @@ set longchunksize 100
 
 script currentschema.js
 
-set statusbar username currentschema dbid editmode txn timing cwd linecol
+-- set statusbar username currentschema dbid editmode txn timing cwd linecol
+set statusbar username dbid editmode txn timing cwd linecol
 
 set serveroutput on size unlimited
 
