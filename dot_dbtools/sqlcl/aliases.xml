@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<aliases>
+    <alias name="check_acdc">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql><![CDATA[@~/.config/sqlcl/aliasScripts/checkACDCObjects.sql]]></sql>
+            </query>
+        </queries>
+    </alias>
+    <alias name="invalid">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql><![CDATA[@~/.config/sqlcl/aliasScripts/invalid.sql]]></sql>
+            </query>
+        </queries>
+    </alias>
+    <alias name="invalidAll">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql><![CDATA[@~/.config/sqlcl/aliasScripts/invalidAll.sql]]></sql>
+            </query>
+        </queries>
+    </alias>
+    <alias name="listUsers">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql><![CDATA[@~/.config/sqlcl/aliasScripts/listUsers/listUsers.sql
+alias listUsersAll=@~/.config/sqlcl/aliasScripts/listUsersAll.sql
+alias invalid=@~/.config/sqlcl/aliasScripts/invalid.sql]]></sql>
+            </query>
+        </queries>
+    </alias>
+    <alias name="listUsersAll">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql><![CDATA[@~/.config/sqlcl/aliasScripts/listUsersAll.sql
+alias invalid=@~/.config/sqlcl/aliasScripts/invalid.sql]]></sql>
+            </query>
+        </queries>
+    </alias>
+    <alias name="resetdb">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql><![CDATA[@~/.config/sqlcl/aliasScripts/dropAll.sql]]></sql>
+            </query>
+        </queries>
+    </alias>
+</aliases>
