@@ -13,20 +13,12 @@ set long 100
 -- Length of LONG or LOB columns to display before breaking into a new visual row
 set longchunksize 100
 
-script currentschema.js
+-- script currentschema.js
 
 -- set statusbar username currentschema dbid editmode txn timing cwd linecol
 set statusbar username dbid editmode txn timing cwd linecol
 
 set serveroutput on size unlimited
-
--- Aliases
-alias resetdb=@~/.sqlcl/aliasScripts/dropAll.sql;
-alias check_acdc=@~/.sqlcl/aliasScripts/checkACDCObjects.sql;
-alias listUsers=@~/.sqlcl/aliasScripts/listUsers/listUsers.sql
-alias listUsersAll=@~/.sqlcl/aliasScripts/listUsersAll.sql
-alias invalid=@~/.sqlcl/aliasScripts/invalid.sql;
-alias invalidAll=@~/.sqlcl/aliasScripts/invalidAll.sql;
 
 --------------------------------------------------------------------------------
 -- Database session Configuration
