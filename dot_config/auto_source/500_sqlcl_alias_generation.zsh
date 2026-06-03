@@ -297,4 +297,101 @@ function sql.generateAliases() {
         # shellcheck disable=1090
         source "${aliasFile}"
     fi
-}
+} # sql.generateAliases
+
+function sql.generateConnections() {
+    local cloudWallet
+
+    ############################################################################
+    ##  TNS Names
+    ############################################################################
+    sqlclGenerateTNSConnections -T -f 'TNS ADMIN' -u admin
+
+    ############################################################################
+    ##  Cloud wallet: LYLEATP1
+    ############################################################################
+    cloudWallet="${TNS_ADMIN}/wallets/Wallet_lyleatp1.zip"
+    sqlclGenerateTNSConnections -c "${cloudWallet}" \
+        -r 'Personal' \
+        -u admin \
+        -u jlyle
+
+    ############################################################################
+    ##  Cloud wallet: ORACLELYLEATP1
+    ############################################################################
+    cloudWallet="${TNS_ADMIN}/wallets/Wallet_oralyleatp1.zip"
+    sqlclGenerateTNSConnections -c "${cloudWallet}" \
+        -r 'Oracle' \
+        -u admin
+
+    ############################################################################
+    ##  Cloud wallet: DBVNA
+    ############################################################################
+    cloudWallet="${TNS_ADMIN}/wallets/Wallet_DBVNA.zip"
+    sqlclGenerateTNSConnections -c "${cloudWallet}" \
+        -r 'Viscosity' \
+        -u admin
+
+    ############################################################################
+    ##  Cloud wallet: HCGBUODRDEV
+    ############################################################################
+    cloudWallet="${TNS_ADMIN}/wallets/Wallet_hcgbuodrdev.zip"
+    sqlclGenerateTNSConnections -c "${cloudWallet}" \
+        -r 'Oracle' \
+        -u admin
+
+    ############################################################################
+    ##  Cloud wallet: OHPEDEPHX1
+    ############################################################################
+    cloudWallet="${TNS_ADMIN}/wallets/Wallet_OHPEDEPHX1.zip"
+    sqlclGenerateTNSConnections -c "${cloudWallet}" \
+        -r 'Oracle' \
+        -u admin
+
+    ############################################################################
+    ##  Cloud wallet: GPASDEVATP
+    ############################################################################
+    cloudWallet="${TNS_ADMIN}/wallets/Wallet_GPASDEVATP.zip"
+    sqlclGenerateTNSConnections -c "${cloudWallet}" \
+        -r 'Oracle' \
+        -u admin
+
+    ############################################################################
+    ##  Cloud wallet: GPASUNSTABLEATP
+    ############################################################################
+    cloudWallet="${TNS_ADMIN}/wallets/Wallet_GPASUNSTABLEATP.zip"
+    sqlclGenerateTNSConnections -c "${cloudWallet}" \
+        -r 'Oracle' \
+        -u admin
+
+    ############################################################################
+    ##  Cloud wallet: SchoolSafetyDemo
+    ############################################################################
+    cloudWallet="${TNS_ADMIN}/wallets/Wallet_SchoolSafetyDemo.zip"
+    sqlclGenerateTNSConnections -c "${cloudWallet}" \
+        -r 'Oracle' \
+        -u admin
+
+    ############################################################################
+    ##  LDAP: XGBU ACE DEV
+    ############################################################################
+    sqlclGenerateOIDConnections \
+        -H "${XGBU_ACE_LDAP_HOST}" \
+        -P "${XGBU_ACE_LDAP_PORT}" \
+        -B "${XGBU_ACE_LDAP_BASE}" \
+        -r 'Oracle' \
+        -u 'acdc' \
+        -i 'platform'
+        # -e 'oracleContext' # This takes too long, so just include platform for now
+
+    ############################################################################
+    ##  LDAP: XGBU ACE DEV TEST
+    ############################################################################
+    sqlclGenerateOIDConnections \
+        -H "${XGBU_ACE_TEST_LDAP_HOST}" \
+        -P "${XGBU_ACE_TEST_LDAP_PORT}" \
+        -B "${XGBU_ACE_TEST_LDAP_BASE}" \
+        -r 'Oracle' \
+        -u 'acdc' \
+        -e 'oracleContext'
+} # sql.generateConnections
