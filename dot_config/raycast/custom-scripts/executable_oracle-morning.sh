@@ -10,6 +10,7 @@
 # Optional parameters:
 # @raycast.icon ☀️
 # @raycast.packageName Raycast Scripts
+# @raycast.argument1 { "type": "password", "placeholder": "Hardware token" }
 
 printf -- '%s\n\n' 'Starting Oracle morning actions'
 
@@ -22,7 +23,7 @@ printf -- '%s\n' 'Launch KeepassXC and sign in if necessary'
 printf -- '%s\n\n' 'KeepassXC launched'
 
 printf -- '%s\n' 'Launch Oracle VPN and connect if necessary'
-./oracle-vpn-login.sh
+./oracle-vpn-login.sh "$1"
 printf -- '%s\n\n' 'Oracle VPN launched'
 
 printf -- '%s\n' 'Launch Oracle Unified Login'
