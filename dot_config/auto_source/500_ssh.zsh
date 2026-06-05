@@ -13,8 +13,17 @@ if [[ -e '/opt/homebrew/lib/libykcs11.dylib' ]]; then
     export SSH_PKCS11_PROVIDER_LIBRARY='/opt/homebrew/lib/libykcs11.dylib'
 elif [[ -e '/usr/local/lib/libykcs11.dylib' ]]; then
     # Intel yubico-piv-tool from brew PKCS11 provider
-    # universal yubico-piv-tool from yubico package install PKCS11 provider
+    # universal yubico-piv-tool PKCS11 provider from yubico package install
     export SSH_PKCS11_PROVIDER_LIBRARY='/usr/local/lib/libykcs11.dylib'
+elif [[ -e '/usr/lib/libykcs11.so' ]]; then
+    # Universal yubico-piv-tool PKCS11 provider
+    export SSH_PKCS11_PROVIDER_LIBRARY='/usr/lib/libykcs11.so'
+elif [[ -e '/Library/OpenSC/lib/opensc-pkcs11.so' ]]; then
+    # Mac OpenSC PKCS11 provider
+    export SSH_PKCS11_PROVIDER_LIBRARY='/Library/OpenSC/lib/opensc-pkcs11.so'
+elif [[ -e '/usr/lib/opensc-pkcs11.so' ]]; then
+    # Universal OpenSC PKCS11 provider
+    export SSH_PKCS11_PROVIDER_LIBRARY='/usr/lib/opensc-pkcs11.so'
 else
     printf -- 'Cannot find viable PKCS11 proivder library, not setting SSH_PKCS11_PROVIDER_LIBRARY variable\n' >&2
 fi
