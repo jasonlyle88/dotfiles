@@ -2,7 +2,7 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Launch Oracle VPN 2
+# @raycast.title Launch Oracle VPN
 # @raycast.mode fullOutput
 
 # Optional parameters:
