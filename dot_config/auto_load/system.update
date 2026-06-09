@@ -228,6 +228,22 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_JAVA} -eq 1 
 fi
 
 ############################################################################
+# Micronaut
+############################################################################
+if command -v 'mn' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_MICRONAUT} -eq 1 ]]; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "Micronaut"
+    printf -- '%s\n' "${h2}"
+
+    (
+        mise ls-remote micronaut | grep -E '^([0-9]+\.?)+$' | awk -F '.' '$1 >= 4' | sed 's/^/micronaut@/'
+    ) | grep -vFf <(mise ls --no-header micronaut | awk '{print $2}') | xargs mise install
+
+    mise use -g micronaut@latest
+fi
+
+############################################################################
 # Node
 ############################################################################
 if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_NODE} -eq 1 ]]; then
