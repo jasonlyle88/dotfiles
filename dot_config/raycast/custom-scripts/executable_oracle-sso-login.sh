@@ -8,7 +8,6 @@
 # Optional parameters:
 # @raycast.icon 🔒
 # @raycast.packageName Raycast Scripts
-# @raycast.argument1 { "type": "password", "placeholder": "VPN Password" }
 
 # Documentation:
 # @raycast.description Oracle SSO login
