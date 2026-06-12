@@ -80,7 +80,7 @@ if command -v 'brew' 1>/dev/null 2>&1; then
 
         if [[ "${outdatedCount}" -gt 0 ]]; then
             printf -- '\n%s\n\n' "${outdatedList}"
-            brew upgrade && brew cleanup
+            brew upgrade --yes && brew cleanup
         fi
     fi
 
@@ -265,11 +265,29 @@ fi
 if command -v 'npm' 1>/dev/null 2>&1; then
     printf -- '\n'
     printf -- '%s\n' "${h2}"
-    printf -- '%s %s\n' "${hs}" "Node (global)"
+    printf -- '%s %s\n' "${hs}" "npm (global)"
     printf -- '%s\n' "${h2}"
 
     if curl -qkf https://registry.npmjs.org 1>/dev/null 2>&1; then
-        npm update -g --no-fund
+        # Upgrade npm first
+        printf -- '\n'
+        printf -- '%s\n' "${h3}"
+        printf -- '%s %s\n' "${hs}" "npm"
+        printf -- '%s\n' "${h3}"
+
+        npm install --no-fund -g npm@latest
+
+        printf -- '\n'
+        printf -- 'Completed\n'
+
+        # Upgrade other packages
+        printf -- '\n'
+        printf -- '%s\n' "${h3}"
+        printf -- '%s %s\n' "${hs}" "global packages"
+        printf -- '%s\n' "${h3}"
+
+        npm update --no-fund -g
+
         printf -- '\n'
         printf -- 'Completed\n'
     else
@@ -330,6 +348,45 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_PYTHON} -eq 
     | grep -vFf <(mise ls --no-header python | awk '{print $2}') | xargs mise install
 
     mise use -g python@latest
+fi
+
+############################################################################
+# PIP
+############################################################################
+if command -v 'pip' 1>/dev/null 2>&1; then
+    printf -- '\n'
+    printf -- '%s\n' "${h2}"
+    printf -- '%s %s\n' "${hs}" "pip (global)"
+    printf -- '%s\n' "${h2}"
+
+    # Upgrade pip first
+    printf -- '\n'
+    printf -- '%s\n' "${h3}"
+    printf -- '%s %s\n' "${hs}" "pip"
+    printf -- '%s\n' "${h3}"
+
+    pip list --outdated |
+        grep -v '^pip\b' |
+        cut -d ' ' -f1 |
+        xargs -n1 pip install --upgrade
+
+    printf -- '\n'
+    printf -- 'Completed\n'
+
+    # Upgrade other packages
+    printf -- '\n'
+    printf -- '%s\n' "${h3}"
+    printf -- '%s %s\n' "${hs}" "global packages"
+    printf -- '%s\n' "${h3}"
+
+    pip list --not-required --outdated |
+        tail -n +3 |
+        grep -v '^pip\b' |
+        cut -d ' ' -f1 |
+        xargs -n1 pip install --upgrade
+
+    printf -- '\n'
+    printf -- 'Completed\n'
 fi
 
 ############################################################################
