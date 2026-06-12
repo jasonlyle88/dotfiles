@@ -1,14 +1,19 @@
 [user]
     email = jason.lyle88@gmail.com
     name = Jason Lyle
+    signingkey = ~/.ssh/personal-github-sign-20260611-prv.key
 [core]
-	excludesfile = ~/.config/git/ignore
+    excludesfile = ~/.config/git/ignore
 [init]
-	defaultBranch = main
+    defaultBranch = main
 [pull]
     rebase = false
 [fetch]
     prune = true
+[gpg]
+    format = ssh
+[commit]
+    gpgsign = true
 [pager]
     branch = false
     tag = false
