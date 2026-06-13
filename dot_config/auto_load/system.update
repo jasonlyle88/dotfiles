@@ -147,38 +147,11 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_SQLCL} -eq 1
     printf -- '%s %s\n' "${hs}" "SQLcl"
     printf -- '%s\n' "${h2}"
 
-    # Get the latest version of Oracle SQLcl
-    local sqlclVersionsFile="$SQLPATH/mise_sqlcl_versions.txt"
-    local latestVersionString
-    latestVersionString="$(curl -sL -r 0-1000 https://download.oracle.com/otn_software/java/sqldeveloper/sqlcl-latest.zip | \
-        grep -aoE "sqlcl/([0-9]+\.?)+" | \
-        head -n 1 | \
-        sed 's|sqlcl/||')"
+    (
+        mise ls-remote aqua:oracle.com/sqlcl | sed 's|^|aqua:oracle.com/sqlcl@|'
+    ) | grep -vFf <(mise ls --no-header aqua:oracle.com/sqlcl | awk '{print $2}') | xargs mise install
 
-    # Check if the version string is valid
-    if [ -z "${latestVersionString}" ]; then
-        echo "Error: Unable to retrieve the latest version of Oracle SQLcl."
-        return 1
-    fi
-
-    # Check if the version string matches the expected format
-    if ! printf '%s' "${latestVersionString}" | grep -qE "^[0-9]+(\.[0-9]+){4}$"; then
-        echo "Error: Invalid version string retrieved: ${latestVersionString}"
-        return 1
-    fi
-
-    # Check if version already added to versions file
-    if ! grep "${latestVersionString}" "${sqlclVersionsFile}"; then
-        printf '%s\n' "${latestVersionString}" >> "${sqlclVersionsFile}"
-    fi
-
-    cat "${sqlclVersionsFile}" | sed 's|^|aqua:oracle.com/sqlcl@|' \
-    | grep -vFf <(mise ls --no-header aqua:oracle.com/sqlcl | awk '{print $2}') | xargs mise install
-
-    mise use -g aqua:oracle.com/sqlcl@"${latestVersionString}"
-
-    unset sqlclVersionsFile
-    unset latestVersionString
+    mise use -g aqua:oracle.com/sqlcl@latest
 fi
 
 ############################################################################
