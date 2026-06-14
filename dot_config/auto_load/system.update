@@ -148,10 +148,10 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_SQLCL} -eq 1
     printf -- '%s\n' "${h2}"
 
     (
-        mise ls-remote aqua:oracle.com/sqlcl | sed 's|^|aqua:oracle.com/sqlcl@|'
-    ) | grep -vFf <(mise ls --no-header aqua:oracle.com/sqlcl | awk '{print $2}') | xargs mise install
+        mise ls-remote sqlcl | sed 's|^|sqlcl@|'
+    ) | grep -vFf <(mise ls --no-header sqlcl | awk '{print $2}') | xargs mise install
 
-    mise use -g aqua:oracle.com/sqlcl@latest
+    mise use -g sqlcl@latest
 fi
 
 ############################################################################
