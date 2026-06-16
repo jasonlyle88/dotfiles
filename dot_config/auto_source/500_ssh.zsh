@@ -115,6 +115,41 @@ ssh.connection.list() {
     fi
 }
 
+############################################################
+##  Manage hardware token with SSH agent
+############################################################
+ssh.agent.loadKeys() {
+    local opJson
+    local opItem
+    local sshKeyFile
+    local sshKeyFilename
+    local sshKeyFilePassword
+
+    # Get the JSON of every SSH key file along with with attached files in JSON
+    opJson="$(op item list --tags 'SSH,Key File' --format=json | op item get - --format=json)"
+
+    # Loop over all SSH keys
+    for sshKeyFile in ~/.ssh/*-prv.key; do
+        sshKeyFilename="$(basename "${sshKeyFile}")"
+
+        # Search for 1Password entry that has the file attached to it
+        opItem="$(jq -r '. | select((.files[]?.name | strings | contains("'"${sshKeyFilename}"'")) or (.fields[]? | select(.type == "FILE") | .value | strings | contains("'"${sshKeyFilename}"'")))' <<< "${opJson}")"
+
+        # Get password from 1Password entry
+        sshKeyFilePassword="$(jq -r '.fields[]? | select(.purpose == "PASSWORD") | .value' <<< "${opItem}")"
+
+        if [[ -z "${sshKeyFilePassword}" ]]; then
+            continue
+        fi
+
+        expect <<EXPECT_EOF
+spawn ssh-add "${sshKeyFile}"
+expect "Enter passphrase for"
+send "${sshKeyFilePassword}\r"
+expect eof
+EXPECT_EOF
+    done
+}
 
 ############################################################
 ##  Manage hardware token with SSH agent
