@@ -130,6 +130,9 @@ ssh.agent.loadKeys() {
 
     # Loop over all SSH keys
     for sshKeyFile in ~/.ssh/*-prv.key; do
+        # Make sure key file exists (in case there is nothing matching glob)
+        [[ -n "${sshKeyFile}" ]] || continue
+
         sshKeyFilename="$(basename "${sshKeyFile}")"
 
         # Search for 1Password entry that has the file attached to it
@@ -138,14 +141,17 @@ ssh.agent.loadKeys() {
         # Get password from 1Password entry
         sshKeyFilePassword="$(jq -r '.fields[]? | select(.purpose == "PASSWORD") | .value' <<< "${opItem}")"
 
+        # Check a password was found
         if [[ -z "${sshKeyFilePassword}" ]]; then
             continue
         fi
 
-        expect <<EXPECT_EOF
-spawn ssh-add "${sshKeyFile}"
+        # Safely load the keyfile into ssh-agent using expect
+        SSH_KEY_FILE="${sshKeyFile}" SSH_KEY_PASSWORD="${sshKeyFilePassword}" expect <<EXPECT_EOF
+set timeout 30
+spawn ssh-add "$::env(SSH_KEY_FILE)"
 expect "Enter passphrase for"
-send "${sshKeyFilePassword}\r"
+send "$::env(SSH_KEY_PASSWORD)\r"
 expect eof
 EXPECT_EOF
     done
