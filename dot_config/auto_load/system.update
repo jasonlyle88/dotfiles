@@ -190,7 +190,6 @@ if command -v 'mise' 1>/dev/null 2>&1 && [[ ${SYSTEM_UPDATE_INSTALL_JAVA} -eq 1 
         mise ls-remote java@oracle | grep -v 'oracle-26.0.0' | sed 's/^/java@/'
         mise ls-remote java@graalvm-community | sed 's/^/java@/'
         mise ls-remote java@temurin | sed 's/^/java@/'
-        mise ls-remote java@microsoft | sed 's/^/java@/'
     ) | grep --invert-match -- '-jre-' | grep -vFf <(mise ls --no-header java | awk '{print $2}') | xargs mise install
 
     mise use -g java@oracle-21
