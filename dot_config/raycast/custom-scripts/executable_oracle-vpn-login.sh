@@ -21,12 +21,13 @@ hardwareToken="$1"
 
 if "${vpnBinary}" status | grep -q 'state: Connected'; then
     printf -- 'VPN is already connected.\n'
-    return 0
+    exit 0
 fi
 
 # Get the hardware token password from keepassxc
-kpxc-cli clip 'https://auth-csec.oraclecloud.com/' password 1>/dev/null 2>&1 && sleep 1
-hardwareTokenPassword="$(pbpaste)"
+hardwareTokenPassword="$(kpxc-cli show -p 'https://auth-csec.oraclecloud.com/' |
+        grep -i 'password:' |
+        sed -E 's|^password:[[:space:]]+||i')"
 
 printf -- 'Connecting to "%s"\n' "${vpnProfile}"
 printf -- '\n'
