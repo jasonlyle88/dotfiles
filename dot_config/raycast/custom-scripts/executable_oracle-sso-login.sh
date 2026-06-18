@@ -14,5 +14,5 @@
 # @raycast.author Jason Lyle
 
 open -n 'https://signon-int-stage.oracle.com/'
-sleep 0.5
-open 'https://signon-int.oracle.com/'
+# sleep 0.5
+# open 'https://signon-int.oracle.com/'

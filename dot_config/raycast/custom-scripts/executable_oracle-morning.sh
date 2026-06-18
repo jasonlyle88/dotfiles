@@ -26,9 +26,9 @@ printf -- '%s\n' 'Launch Oracle VPN and connect if necessary'
 ./oracle-vpn-login.sh "$1"
 printf -- '%s\n\n' 'Oracle VPN launched'
 
-printf -- '%s\n' 'Launch Oracle Unified Login'
-./oracle-unified-login.sh
-printf -- '%s\n\n' 'Oracle Unified Login launched'
+# printf -- '%s\n' 'Launch Oracle Unified Login'
+# ./oracle-unified-login.sh
+# printf -- '%s\n\n' 'Oracle Unified Login launched'
 
 printf -- '%s\n' 'Launch Oracle SSO Login'
 ./oracle-sso-login.sh
