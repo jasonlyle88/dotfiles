@@ -17,6 +17,8 @@
 # sleep 0.5
 # open 'https://signon-int.oracle.com/'
 
+set -euo pipefail
+
 url='https://signon-int.oracle.com/'
 bundle_id="$(duti -d https)"
 

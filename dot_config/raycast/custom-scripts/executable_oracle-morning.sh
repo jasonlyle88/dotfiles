@@ -12,6 +12,8 @@
 # @raycast.packageName Raycast Scripts
 # @raycast.argument1 { "type": "password", "placeholder": "Hardware token" }
 
+set -euo pipefail
+
 printf -- '%s\n\n' 'Starting Oracle morning actions'
 
 printf -- '%s\n' 'Launch 1Password and sign in if necessary'

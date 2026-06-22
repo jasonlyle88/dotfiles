@@ -14,4 +14,6 @@
 # @raycast.icon 🤖
 # @raycast.packageName Raycast Scripts
 
+set -euo pipefail
+
 echo "Hello from My First Script"

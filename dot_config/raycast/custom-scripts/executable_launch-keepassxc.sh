@@ -13,6 +13,8 @@
 # @raycast.description Open KeepassXC
 # @raycast.author Jason Lyle
 
+set -euo pipefail
+
 if ! kpxc-cli status | grep -q 'Associated: yes'; then
     open -a "KeePassXC"
 

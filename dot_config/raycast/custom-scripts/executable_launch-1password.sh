@@ -13,6 +13,8 @@
 # @raycast.description Open 1Password
 # @raycast.author Jason Lyle
 
+set -euo pipefail
+
 if ! pgrep -x -- '1Password' >/dev/null 2>&1; then
     open -a '1password' --args --silent
 fi

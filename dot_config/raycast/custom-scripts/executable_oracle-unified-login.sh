@@ -13,9 +13,11 @@
 # @raycast.description Launch Oracle Unified Login
 # @raycast.author Jason Lyle
 
+set -euo pipefail
+
 check_app_status() {
     local app_name="$1"
-    
+
     # 1. Fast PID check
     if pgrep -x "$app_name" > /dev/null; then
         # 2. Detailed AppleScript state check
