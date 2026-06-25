@@ -24,6 +24,7 @@ if DOCKER_HOST_VALUE="$(podman info --format '{{.Host.RemoteSocket.Path}}' 2>/de
         # On macOS, we need to set the DOCKER_HOST environment variable for GUI apps as well
         launchctl setenv DOCKER_HOST "${DOCKER_HOST}"
     fi
+fi
 
-# do not show warning message that `podman compose` is executing an external binary
+# do not show warning message that 'podman compose' is executing an external binary
 # export PODMAN_COMPOSE_WARNING_LOGS=false
