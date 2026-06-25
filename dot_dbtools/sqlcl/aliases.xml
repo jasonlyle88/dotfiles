@@ -8,6 +8,14 @@
             </query>
         </queries>
     </alias>
+    <alias name="cls">
+        <description/>
+        <queries>
+            <query minversion="8">
+                <sql><![CDATA[clear screen]]></sql>
+            </query>
+        </queries>
+    </alias>
     <alias name="invalid">
         <description/>
         <queries>
