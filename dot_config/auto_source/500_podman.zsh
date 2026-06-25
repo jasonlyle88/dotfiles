@@ -22,17 +22,22 @@ PODMAN_CURRENT_MACHINE="$(podman machine info --format '{{.Host.CurrentMachine}}
 PODMAN_CURRENT_MACHINE_STATE="$(podman machine info --format '{{.Host.MachineState}}' 2>/dev/null)"
 DOCKER_HOST_VALUE=''
 
+# If there is no current machine, use the default podman socket path.
+# Otherwise, use the socket path for the current machine.
 if [[ -z "${PODMAN_CURRENT_MACHINE}" ]]; then
     DOCKER_HOST_VALUE="${PODMAN_SOCKET_PATH}/podman.sock"
 else
     DOCKER_HOST_VALUE="${PODMAN_SOCKET_PATH}/${PODMAN_CURRENT_MACHINE}-api.sock"
 fi
 
+# If the current machine is running, but the socket file does not exist,
+# print a warning and unset DOCKER_HOST_VALUE.
 if [[ -n "${PODMAN_CURRENT_MACHINE}" && "${PODMAN_CURRENT_MACHINE_STATE}" == "Running" && ! -e "${DOCKER_HOST_VALUE}" ]]; then
     printf -- "Podman machine '%s' is running, but the socket file '%s' does not exist. investigate.\n" "${PODMAN_CURRENT_MACHINE}" "${DOCKER_HOST_VALUE}" >&2
     DOCKER_HOST_VALUE=''
 fi
 
+# If DOCKER_HOST_VALUE is set and does not start with 'unix://', prepend it.
 if [[ -n "${DOCKER_HOST_VALUE}" && "${DOCKER_HOST_VALUE}" != 'unix://'* ]]; then
     DOCKER_HOST_VALUE="unix://${DOCKER_HOST_VALUE}"
 fi
