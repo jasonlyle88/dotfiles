@@ -13,11 +13,16 @@ fi
 
 # Setup DOCKER_HOST to point to the podman socket
 # This allows tools like docker-compose to work with podman
-DOCKER_HOST_VALUE="$(podman info --format '{{.Host.RemoteSocket.Path}}')"
-if [[ "${DOCKER_HOST_VALUE}" != 'unix://'* ]]; then
-    DOCKER_HOST_VALUE="unix://${DOCKER_HOST_VALUE}"
+if DOCKER_HOST_VALUE="$(podman info --format '{{.Host.RemoteSocket.Path}}' 2>/dev/null)"; then
+
+    if [[ "${DOCKER_HOST_VALUE}" != 'unix://'* ]]; then
+        DOCKER_HOST_VALUE="unix://${DOCKER_HOST_VALUE}"
+    fi
+    export DOCKER_HOST="${DOCKER_HOST_VALUE}"
+
+    launchctl setenv DOCKER_HOST "${DOCKER_HOST}"
+
 fi
-export DOCKER_HOST="${DOCKER_HOST_VALUE}"
 
 # do not show warning message that `podman compose` is executing an external binary
 # export PODMAN_COMPOSE_WARNING_LOGS=false
