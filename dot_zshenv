@@ -50,6 +50,12 @@ export PERSONAL_AUTOLOAD_DIR="${XDG_CONFIG_HOME}/auto_load"
 export PERSONAL_AUTOSOURCE_DIR="${XDG_CONFIG_HOME}/auto_source"
 
 ##
+##  User
+##
+export UID="$(id -u)"
+export GID="$(id -g)"
+
+##
 ##  Starship
 ##
 export STARSHIP_CONFIG="${XDG_CONFIG_HOME}/starship/starship.toml"
