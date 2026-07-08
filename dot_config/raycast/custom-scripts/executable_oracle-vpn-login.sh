@@ -16,39 +16,6 @@
 
 set -euo pipefail
 
-vpnBinary='/opt/cisco/secureclient/bin/vpn'
-vpnProfile='OCNA - US East (v2)'
-vpnUsername='jason.lyle'
 hardwareToken="$1"
-
-if "${vpnBinary}" status | grep -q 'state: Connected'; then
-    printf -- 'VPN is already connected.\n'
-    exit 0
-fi
-
-# Get the hardware token password from keepassxc
-hardwareTokenPassword="$(kpxc-cli show -p 'https://auth-csec.oraclecloud.com/' |
-        grep -i 'password:' |
-        sed -E 's|^password:[[:space:]]+||i')"
-
-printf -- 'Connecting to "%s"\n' "${vpnProfile}"
-printf -- '\n'
-
-# Kill Cisco Secure Client if it's running.
-# This is necessary because the cli will not connect if the GUI is open.
-pkill -x 'Cisco Secure Client' || true
-
-"${vpnBinary}" -s connect "${vpnProfile}" <<EOF
-${vpnUsername}
-${hardwareTokenPassword}${hardwareToken}
-y
-exit
-EOF
-
-if ! "${vpnBinary}" status | grep -q 'state: Connected'; then
-    printf -- 'VPN connection failed.\n' >&2
-    exit 1
-fi
-
-# Open the Cisco Secure Client GUI in the the background
-open -ga 'Cisco Secure Client'
+source "${HOME}/.config/auto_source/500_oracle_xgbu-ace.zsh"
+oracle.vpn.connectOCNA "${hardwareToken}"

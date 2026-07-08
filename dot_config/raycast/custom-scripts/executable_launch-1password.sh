@@ -16,7 +16,7 @@
 set -euo pipefail
 
 if ! pgrep -x -- '1Password' >/dev/null 2>&1; then
-    open -a '1password' --args --silent
+    open -a '1Password' --args --silent
 fi
 
 OP_SERVICE_ACCOUNT_TOKEN='' op account get >/dev/null 2>&1
