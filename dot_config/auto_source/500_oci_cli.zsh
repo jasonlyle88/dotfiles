@@ -11,6 +11,7 @@ fi
 # Configured based on values from documentation at
 # https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/clienvironmentvariables.htm
 
-export OCI_CLI_CONFIG_FILE="${XDG_CONFIG_HOME}/oci/config"
-export OCI_CLI_RC_FILE="${XDG_CONFIG_HOME}/oci/oci_cli_rc"
+export OCI_CLI_CONFIG_HOME="${XDG_CONFIG_HOME}/oci"
+export OCI_CLI_CONFIG_FILE="${OCI_CLI_CONFIG_HOME}/config"
+export OCI_CLI_RC_FILE="${OCI_CLI_CONFIG_HOME}/oci_cli_rc"
 export OCI_CLI_PROFILE='DEFAULT'
