@@ -12,7 +12,7 @@ fi
 export PIPX_DEFAULT_PYTHON='python'
 
 # Default to never fetching missing Python versions
-export PIPX_FETCH_MISSING_PYTHON='never'
+export PIPX_FETCH_PYTHON='never'
 
 # Other variables that can be set to control PIPX
 export PIPX_HOME="${XDG_DATA_HOME}/pipx"
