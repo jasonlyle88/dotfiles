@@ -1,0 +1,52 @@
+# shellcheck shell=bash
+
+############################################################################
+## Configurable variables
+############################################################################
+local systemJavaDirectory="/Library/Java/JavaVirtualMachines"
+local groupOwner="admin"
+
+############################################################################
+## Procedural variables
+############################################################################
+local headerFull="--------------------------------------------------------------------------------"
+local headerSub="------------------------------------------------------------"
+local headerText="--"
+local currentGroupOwner
+local groupWriteMissing
+
+printf -- '%s\n' "${headerFull}"
+printf -- '%s Setup Java Version access in macOS System Java Directory\n' "${headerText}"
+printf -- '%s\n' "${headerFull}"
+printf -- '\n'
+
+printf -- '%s\n' "${headerSub}"
+printf -- '%s Check directory owner\n' "${headerText}"
+printf -- '%s\n' "${headerSub}"
+
+# shellcheck disable=SC2012
+currentGroupOwner="$(command ls -ld "${systemJavaDirectory}" | awk '{print $4}')"
+
+if [[ "${currentGroupOwner}" == "${groupOwner}" ]]; then
+    printf -- '%s Directory owner is already set to the desired group: %s\n' "${headerText}" "${groupOwner}"
+else
+    printf -- '%s Directory owner is not set to the desired group: %s => %s\n' "${headerText}" "${currentGroupOwner}" "${groupOwner}"
+    sudo chown :"${groupOwner}" "${systemJavaDirectory}"
+    printf -- '%s Directory owner has been updated to the desired group: %s\n' "${headerText}" "${groupOwner}"
+fi
+
+printf -- '\n'
+
+printf -- '%s\n' "${headerSub}"
+printf -- '%s Check directory permissions\n' "${headerText}"
+printf -- '%s\n' "${headerSub}"
+
+groupWriteMissing="$(command find "${systemJavaDirectory}" -type d -prune ! -perm -020 -print -quit)"
+
+if [[ -z "${groupWriteMissing}" ]]; then
+    printf -- '%s Directory permissions already include group write access\n' "${headerText}"
+else
+    printf -- '%s Directory permissions do not include group write access\n' "${headerText}"
+    sudo chmod g+w "${systemJavaDirectory}"
+    printf -- '%s Directory permissions have been updated to include group write access\n' "${headerText}"
+fi
