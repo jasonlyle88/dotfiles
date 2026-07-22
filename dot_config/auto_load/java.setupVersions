@@ -34,7 +34,7 @@ if touch "${systemJavaDirectory}" 1>/dev/null 2>&1; then
     printf -- 'Write access to %s is available\n' "${systemJavaDirectory}"
 else
     printf -- 'Write access to %s is not available\n' "${systemJavaDirectory}" >&2
-    return 1
+    java.setupVersionAccess
 fi
 printf -- '\n'
 
