@@ -85,6 +85,13 @@ if command -v 'brew' 1>/dev/null 2>&1; then
     fi
 
     printf -- '\n'
+    printf -- '%s\n' "${h3}"
+    printf -- '%s %s\n' "${hs}" "Bundle"
+    printf -- '%s\n' "${h3}"
+
+    brew bundle dump --global --no-describe --force
+
+    printf -- '\n'
     printf -- 'Completed\n'
 fi
 
