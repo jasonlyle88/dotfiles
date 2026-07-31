@@ -346,7 +346,7 @@ if command -v 'pip' 1>/dev/null 2>&1; then
     printf -- '%s\n' "${h3}"
 
     pip list --outdated |
-        grep -v '^pip\b' |
+        grep '^pip\b' |
         cut -d ' ' -f1 |
         xargs -n1 pip install --upgrade
 
