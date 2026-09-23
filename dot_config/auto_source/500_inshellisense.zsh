@@ -10,5 +10,8 @@ fi
 
 inshellisense_home="${HOME}/.inshellisense"
 
+# Ensure inshellisense shell configurations are up to date
+inshellisense reinit 1>/dev/null 2>&1
+
 # Setup inshellisense shell environment
 [[ -f "${inshellisense_home}/init/zsh/init.zsh" ]] && source "${inshellisense_home}/init/zsh/init.zsh"
