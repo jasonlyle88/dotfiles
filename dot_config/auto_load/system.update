@@ -248,7 +248,7 @@ if command -v 'npm' 1>/dev/null 2>&1; then
     printf -- '%s %s\n' "${hs}" "npm (global)"
     printf -- '%s\n' "${h2}"
 
-    if curl -qkf https://registry.npmjs.org 1>/dev/null 2>&1; then
+    if curl -qkf "$(npm config get registry)" 1>/dev/null 2>&1; then
         # Upgrade npm first
         printf -- '\n'
         printf -- '%s\n' "${h3}"
