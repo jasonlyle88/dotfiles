@@ -1,4 +1,0 @@
-cache=${XDG_CACHE_HOME}/npm
-init-module=${XDG_CONFIG_HOME}/npm/config/npm-init.js
-@igiu:registry=https://artifactory.oci.oraclecorp.com/api/npm/cgiu-monetization-dev-npm-local/
-registry=https://artifacthub-iad.oci.oraclecorp.com/api/npm/npmjs-registry/
