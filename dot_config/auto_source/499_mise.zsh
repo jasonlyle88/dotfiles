@@ -2,6 +2,9 @@
 
 ################################################################################
 # Setup mise
+#
+# This script runs before other scripts because mise needs to be activated
+# to ensure that other tools are recognized on the system correctly.
 ################################################################################
 
 # Attempt to install mise
